@@ -14,3 +14,4 @@ The Campus Resource Rescue System will use a web-based client-server architectur
 # Frontend
 The frontend will use **React with TypeScript**. React is suitable for building interactive pages such as the marketplace, user dashboard, reservation screens, collection-drive pages, and administrative panels. TypeScript adds type checking, which can reduce errors and make collaboration easier across the four-person team.
 **Tailwind CSS** will be used for styling. It supports rapid development of responsive and consistent interfaces without requiring the team to maintain a large amount of custom CSS.
+
