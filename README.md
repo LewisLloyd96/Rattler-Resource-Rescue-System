@@ -1,5 +1,5 @@
 # Team Members:
-# - Lloyd Lewis
+- Lloyd Lewis
 # - Ondrea Wagner
 # - Naser Halloum
 # - Isaiah Miller
