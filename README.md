@@ -13,6 +13,8 @@ The Campus Resource Rescue System is a website that allows students, employees, 
 Users can: Create an account, list items with descriptions and photos, search and filter available items, reserve items and schedule pickups, and view their listings and reservations.
 
 Department managers can approve department-owned items and track savings. Administrators can manage users, review reports, and generate system-usage and sustainability reports.
+# Dev IDE 
+VSCode
 
 # Final Python Technical Stack
 The Campus Resource Rescue System will use a web-based client-server architecture. The frontend will provide the user interface, while a Python backend will manage authentication, business rules, database operations, permissions, reservations, and reporting.
