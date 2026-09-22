@@ -1,3 +1,4 @@
+# Team Members: Lloyd Lewis, Ondrea Wagner, Naser Halloum
 # Campus-Resource-Rescue-System
 
 The Campus Resource Rescue System is a website that allows students, employees, and departments to share unused items such as textbooks, electronics, furniture, and school supplies. Users #can list, search for, reserve, and pick up items. The system would reduce campus waste and save money
