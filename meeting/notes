@@ -1,11 +1,12 @@
-**Sprint Cycle 0 Meeting 1**
+# Sprint Cycle 0 & 1 Meeting Notes
 
-**Date:** September 2026
-**Meeting Type:** Team Planning Meeting
-**Purpose:** Introduce the project and establish the team's initial plan.
+## Sprint Cycle 0 Meeting 1
+* **Date:** September 2026
+* **Meeting Type:** Team Planning Meeting
+* **Purpose:** Introduce the project and establish the team's initial plan.
 
-**Discussion**
 
+### Discussion
 * Reviewed the overall purpose of the course project.
 * Discussed the application idea and the problem the system is intended to address.
 * Reviewed the initial project requirements provided by the instructor.
@@ -14,29 +15,27 @@
 * Discussed communication methods and how the team would coordinate work.
 * Discussed the importance of keeping project files and documentation organized.
 
-**Decisions**
-
+### Decisions
 * Continue developing the proposed student resource application.
 * Use GitHub for project source code and collaboration.
 * Communicate regularly as a team and document important meetings.
 * Divide project responsibilities among team members.
 
-**Action Items**
+### Action Items
+- [ ] Confirm the project name and repository.
+- [ ] Review the requirements in more detail.
+- [ ] Set up the GitHub repository.
+- [ ] Begin researching the system's potential users and features.
+- [ ] Prepare for the next team meeting.
 
-* Confirm the project name and repository.
-* Review the requirements in more detail.
-* Set up the GitHub repository.
-* Begin researching the system's potential users and features.
-* Prepare for the next team meeting.
 
-**Sprint Cycle 0 Meeting 2**
+## Sprint Cycle 0 Meeting 2
+* **Date:** September 2026
+* **Meeting Type:** Requirements Planning Meeting
+* **Purpose:** Review the project's functional requirements and determine the basic structure of the system.
 
-**Date:** September 2026
-**Meeting Type:** Requirements Planning Meeting
-**Purpose:** Review the project's functional requirements and determine the basic structure of the system.
 
-**Discussion**
-
+### Discussion
 * Reviewed the Functional Requirements document.
 * Identified the primary users who would interact with the system.
 * Discussed the types of resources and services the application should provide.
@@ -46,29 +45,27 @@
 * Considered the technologies that could be used during development.
 * Discussed how the requirements would guide future sprint cycles.
 
-**Decisions**
-
+### Decisions
 * Use the Functional Requirements document as the primary reference for development.
 * Organize system functions around the identified user roles.
 * Begin with the core functionality before adding additional features.
 * Continue refining requirements before moving into detailed UI design.
 
-**Action Items**
+### Action Items
+- [ ] Finalize the list of user roles.
+- [ ] Review and clarify the proposed use cases.
+- [ ] Continue evaluating the technology stack.
+- [ ] Update the project documentation.
+- [ ] Prepare requirements information for the next sprint.
 
-* Finalize the list of user roles.
-* Review and clarify the proposed use cases.
-* Continue evaluating the technology stack.
-* Update the project documentation.
-* Prepare requirements information for the next sprint.
+---
 
-**Sprint Cycle 0 Meeting 3**
+## Sprint Cycle 0 Meeting 3
+* **Date:** September 2026
+* **Meeting Type:** Sprint Review and Planning Meeting
+* **Purpose:** Review Sprint Cycle 0 progress and prepare for the next sprint.
 
-**Date:** September 2026
-**Meeting Type:** Sprint Review and Planning Meeting
-**Purpose:** Review Sprint Cycle 0 progress and prepare for the next sprint.
-
-**Discussion**
-
+### Discussion
 * Reviewed the work completed during Sprint Cycle 0.
 * Confirmed that the team had reviewed the project requirements.
 * Reviewed the proposed user roles and major system functions.
@@ -78,30 +75,27 @@
 * Discussed beginning the application's user interface design in the next sprint.
 * Identified the screens that would eventually be needed based on the requirements.
 
-**Decisions**
-
+### Decisions
 * Move forward with the current project concept.
 * Use the requirements and use cases from Sprint Cycle 0 as the foundation for Sprint Cycle 1.
 * Begin designing the application's interface during Sprint Cycle 1.
 * Continue using GitHub for collaboration and version control.
 
-**Action Items**
+### Action Items
+- [ ] Finalize any remaining Sprint Cycle 0 documentation.
+- [ ] Prepare the project for UI development.
+- [ ] Begin planning the sign-in and navigation structure for Sprint Cycle 1.
+- [ ] Assign Sprint Cycle 1 tasks to team members.
+- [ ] Continue documenting team meetings and project progress.
 
-* Finalize any remaining Sprint Cycle 0 documentation.
-* Prepare the project for UI development.
-* Begin planning the sign-in and navigation structure for Sprint Cycle 1.
-* Assign Sprint Cycle 1 tasks to team members.
-* Continue documenting team meetings and project progress.
+
+## Sprint Cycle 1 Meeting 1
+* **Date:** September 2026
+* **Meeting Type:** Team Planning Meeting
+* **Purpose:** Review the Functional Requirements document and determine the initial application structure.
 
 
-**Sprint Cycle 1 Meeting 1**
-
-**Date:** September 2026
-**Meeting Type:** Team Planning Meeting
-**Purpose:** Review the Functional Requirements document and determine the initial application structure.
-
-**Discussion**
-
+### Discussion
 * Reviewed the Functional Requirements document and discussed the main features of the application.
 * Identified the different user roles and what each role should be able to access.
 * Discussed the sign-in process and role-based navigation.
@@ -109,18 +103,45 @@
 * Discussed the GitHub repository and confirmed that each team member should have access.
 * Agreed that the first priority would be creating the basic UI screens before beginning major application implementation.
 
-**Decisions**
-
+### Decisions
 * Create a sign-in screen as the starting point of the application.
 * Create separate landing/navigation screens based on user roles.
 * Select two use cases for each role to represent in the initial UI design.
 * Keep the initial screens simple and consistent so they can be modified during later sprint cycles.
 
-**Action Items**
-
-* Create the GitHub repository and verify team member access.
-* Begin designing the sign-in screen.
-* Identify the two use cases selected for each role.
-* Review the requirements before the next meeting.
+### Action Items
+- [ ] Create the GitHub repository and verify team member access.
+- [ ] Begin designing the sign-in screen.
+- [ ] Identify the two use cases selected for each role.
+- [ ] Review the requirements before the next meeting.
 
 **Next Meeting:** Review initial screen designs and confirm the selected use cases.
+
+# Sprint Cycle 1 Meeting Notes
+
+## Meeting 1 - Project Introduction & Team Organization
+* **Date:** September 2026
+* **Meeting Type:** Team Planning Meeting
+* **Purpose:** Introduce the project and establish the team's initial plan.
+
+### Discussion
+* Reviewed the overall purpose of the course project.
+* Discussed the application idea and the problem the system is intended to address.
+* Reviewed the initial project requirements provided by the instructor.
+* Discussed the expected deliverables for Sprint Cycle 0.
+* Confirmed team members and discussed each member's responsibilities.
+* Discussed communication methods and how the team would coordinate work.
+* Discussed the importance of keeping project files and documentation organized.
+
+### Decisions
+* Continue developing the proposed student resource application.
+* Use GitHub for project source code and collaboration.
+* Communicate regularly as a team and document important meetings.
+* Divide project responsibilities among team members.
+
+### Action Items
+- [ ] Confirm the project name and repository.
+- [ ] Review the requirements in more detail.
+- [ ] Set up the GitHub repository.
+- [ ] Begin researching the system's potential users and features.
+- [ ] Prepare for the next team meeting.
