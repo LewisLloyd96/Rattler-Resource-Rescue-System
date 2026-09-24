@@ -29,3 +29,98 @@
 * Begin researching the system's potential users and features.
 * Prepare for the next team meeting.
 
+**Sprint Cycle 0 Meeting 2**
+
+**Date:** September 2026
+**Meeting Type:** Requirements Planning Meeting
+**Purpose:** Review the project's functional requirements and determine the basic structure of the system.
+
+**Discussion**
+
+* Reviewed the Functional Requirements document.
+* Identified the primary users who would interact with the system.
+* Discussed the types of resources and services the application should provide.
+* Discussed the main functions that each user role may need.
+* Reviewed potential use cases for the application.
+* Discussed the information that would need to be stored by the system.
+* Considered the technologies that could be used during development.
+* Discussed how the requirements would guide future sprint cycles.
+
+**Decisions**
+
+* Use the Functional Requirements document as the primary reference for development.
+* Organize system functions around the identified user roles.
+* Begin with the core functionality before adding additional features.
+* Continue refining requirements before moving into detailed UI design.
+
+**Action Items**
+
+* Finalize the list of user roles.
+* Review and clarify the proposed use cases.
+* Continue evaluating the technology stack.
+* Update the project documentation.
+* Prepare requirements information for the next sprint.
+
+**Sprint Cycle 0 Meeting 3**
+
+**Date:** September 2026
+**Meeting Type:** Sprint Review and Planning Meeting
+**Purpose:** Review Sprint Cycle 0 progress and prepare for the next sprint.
+
+**Discussion**
+
+* Reviewed the work completed during Sprint Cycle 0.
+* Confirmed that the team had reviewed the project requirements.
+* Reviewed the proposed user roles and major system functions.
+* Checked the GitHub repository and confirmed that team members could access it.
+* Discussed the project's planned technology stack and development approach.
+* Reviewed the tasks that would need to be completed during Sprint Cycle 1.
+* Discussed beginning the application's user interface design in the next sprint.
+* Identified the screens that would eventually be needed based on the requirements.
+
+**Decisions**
+
+* Move forward with the current project concept.
+* Use the requirements and use cases from Sprint Cycle 0 as the foundation for Sprint Cycle 1.
+* Begin designing the application's interface during Sprint Cycle 1.
+* Continue using GitHub for collaboration and version control.
+
+**Action Items**
+
+* Finalize any remaining Sprint Cycle 0 documentation.
+* Prepare the project for UI development.
+* Begin planning the sign-in and navigation structure for Sprint Cycle 1.
+* Assign Sprint Cycle 1 tasks to team members.
+* Continue documenting team meetings and project progress.
+
+
+**Sprint Cycle 1 Meeting 1**
+
+**Date:** September 2026
+**Meeting Type:** Team Planning Meeting
+**Purpose:** Review the Functional Requirements document and determine the initial application structure.
+
+**Discussion**
+
+* Reviewed the Functional Requirements document and discussed the main features of the application.
+* Identified the different user roles and what each role should be able to access.
+* Discussed the sign-in process and role-based navigation.
+* Reviewed the Sprint Cycle 0 deliverables and divided responsibilities among team members.
+* Discussed the GitHub repository and confirmed that each team member should have access.
+* Agreed that the first priority would be creating the basic UI screens before beginning major application implementation.
+
+**Decisions**
+
+* Create a sign-in screen as the starting point of the application.
+* Create separate landing/navigation screens based on user roles.
+* Select two use cases for each role to represent in the initial UI design.
+* Keep the initial screens simple and consistent so they can be modified during later sprint cycles.
+
+**Action Items**
+
+* Create the GitHub repository and verify team member access.
+* Begin designing the sign-in screen.
+* Identify the two use cases selected for each role.
+* Review the requirements before the next meeting.
+
+**Next Meeting:** Review initial screen designs and confirm the selected use cases.
