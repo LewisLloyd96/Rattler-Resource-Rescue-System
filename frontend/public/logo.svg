@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Campus Resource Rescue logo">
+  <circle cx="32" cy="32" r="30" fill="#047857"/>
+  <path d="M32 14 l10 12 h-6 v8 h-8 v-8 h-6 z" fill="#ecfdf5"/>
+  <path d="M18 38 h28 l-4 12 H22 z" fill="#fbbf24"/>
+</svg>
