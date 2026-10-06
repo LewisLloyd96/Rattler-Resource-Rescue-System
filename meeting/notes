@@ -106,6 +106,8 @@
 * Create separate landing/navigation screens based on user roles.
 * Select two use cases for each role to represent in the initial UI design.
 * Keep the initial screens simple and consistent so they can be modified during later sprint cycles.
+* Decided Lloyd will design the sign-in screen, Naser will design the Role-Based Landing/Navigation Screens, Isaiah will design 
+screens for two use cases for each role, and Ondrea will implement a simple application splash/home screen.
 
 ### Action Items
 - [ ] Create the GitHub repository and verify team member access.
