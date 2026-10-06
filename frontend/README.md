@@ -1,9 +1,9 @@
-# Campus Resource Rescue System – Frontend
+# Rattler Resource Rescue System – Frontend
 
-Splash/home screen built with **React + TypeScript + Tailwind CSS** (Vite).
+Home screen (based on the Figma wireframe) built with **React + TypeScript + Tailwind CSS** (Vite).
 It is a technical proof that the toolchain works. The navigation links are placeholders.
 
-![Splash screen](../docs/splash_screen.png)
+![Home screen](../docs/home_screen.png)
 
 ## Run it
 
