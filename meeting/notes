@@ -165,3 +165,22 @@ screens for two use cases for each role, and Ondrea will implement a simple appl
 * [ ] Assign meaningful GitHub contributions to each team member.
 * [ ] Have each team member pull the latest repository and verify that the application runs.
 * [ ] Begin preparing the Sprint Cycle I presentation.
+
+# Sprint Cycle 2 Meeting 1
+
+### Discussion
+
+* Reviewed the purpose and requirements of Sprint Cycle II.
+* Discussed the focus on database design for the complete application.
+* Reviewed the Functional Requirements document and discussed the importance of supporting all system roles and use cases.
+* Discussed the five system roles and the data each role may need to access or manage.
+* Reviewed the Sprint Cycle I User Interface Design and discussed how the screens relate to the information that must be stored.
+* Discussed the difference between designing the database and implementing the database.
+* Identified the need to determine the major entities, attributes, relationships, primary keys, and foreign keys.
+* Discussed the requirements for the Entity-Relationship Diagram.
+* Discussed creating a Data Dictionary to document the database fields.
+* Discussed identifying important business rules that should be enforced by the application or database.
+* Divided Sprint Cycle II responsibilities among the four team members.
+* Discussed using the team GitHub repository to organize and submit all Sprint Cycle II materials.
+* Agreed to review the database design as a team before submission.
+* Decided Isaiah is doing the Business Rules, Naser is doing the ERD, and Ondrea and Lloyd are doing the Data Dictionary.
