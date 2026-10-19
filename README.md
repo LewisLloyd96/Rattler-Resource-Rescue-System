@@ -1,8 +1,8 @@
 # Team Members:
-- Team memember 1 - Lloyd Lewis
-- Team memember 2 - Ondrea Wagner
-- Team memember 3 - Naser Halloum
-- Team memember 4 - Isaiah Miller
+- Team member 1 - Lloyd Lewis
+- Team member 2 - Ondrea Wagner
+- Team member 3 - Isaiah Miller
+- Team member 4 - Naser Halloum
 
 # Campus-Resource-Rescue-System
 
