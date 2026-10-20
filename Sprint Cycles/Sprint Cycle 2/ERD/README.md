@@ -2,9 +2,22 @@
 
 ![Rattler Resource Rescue System ERD](Sprint-II-ERD.png)
 
+## Files
+
+| File | Use |
+|---|---|
+| [Sprint-II-ERD.pdf](Sprint-II-ERD.pdf) | **Full ERD, best for viewing.** Vector PDF, stays sharp at any zoom. |
+| [Sprint-II-ERD.png](Sprint-II-ERD.png) | Full ERD as an image. |
+| [ERD-1-Users-Roles-Organizations](ERD-1-Users-Roles-Organizations.png) ([PDF](ERD-1-Users-Roles-Organizations.pdf)) | USER, ROLE, PERMISSION, ROLE_PERMISSION, ORGANIZATION, ORGANIZATION_MEMBER, NOTIFICATION, SYSTEM_SETTING |
+| [ERD-2-Items-Reservations-Exchanges](ERD-2-Items-Reservations-Exchanges.png) ([PDF](ERD-2-Items-Reservations-Exchanges.pdf)) | CATEGORY, ITEM, ITEM_IMAGE, RESERVATION, EXCHANGE, MESSAGE |
+| [ERD-3-Collection-Drives](ERD-3-Collection-Drives.png) ([PDF](ERD-3-Collection-Drives.pdf)) | COLLECTION_EVENT, EVENT_CATEGORY, EVENT_ITEM |
+| [ERD-4-Reports-Moderation](ERD-4-Reports-Moderation.png) ([PDF](ERD-4-Reports-Moderation.pdf)) | REPORT, MODERATION_CASE, MODERATION_ACTION |
+
+The section diagrams split the full ERD into readable parts. In each section, entities from other sections are shown with only their primary key so the connecting relationships are still visible.
+
 Crow's foot notation: `||` exactly one, `|o` zero or one, `o{` zero or many. Attributes marked **optional** are nullable; **NEW** marks fields and entities added in this revision. Many-to-many relationships are resolved with the associative entities `ROLE_PERMISSION`, `ORGANIZATION_MEMBER`, `EVENT_CATEGORY` and `EVENT_ITEM`.
 
-The diagram source is below (Mermaid, rendered by GitHub). To change the ERD, edit this block and re-export the PNG, keeping it in sync with the [Data Dictionary](../Data%20Dictionary/Data-Dictionary.md).
+The full diagram source is below (Mermaid, rendered by GitHub). To change the ERD, edit this block and re-export the PNG, keeping it in sync with the [Data Dictionary](../Data%20Dictionary/Data-Dictionary.md).
 
 ```mermaid
 ---
