@@ -38,7 +38,7 @@ The ERD represents the major entities required by the application and shows:
 * Relationships
 * Relationship cardinality
 
-See the `ERD` folder for the completed diagram.
+See [`ERD/Sprint-II-ERD.png`](ERD/Sprint-II-ERD.png) for the completed diagram and [`ERD/README.md`](ERD/README.md) for notation and its editable source.
 
 ### 2. Data Dictionary
 
@@ -53,7 +53,7 @@ For each field, the Data Dictionary identifies:
 * Key Type
 * Required or Optional
 
-See the `Data-Dictionary` folder for the complete Data Dictionary.
+See [`Data Dictionary/Data-Dictionary.md`](Data%20Dictionary/Data-Dictionary.md) or the Excel version in the same folder.
 
 ### 3. Business Rules
 
@@ -66,22 +66,26 @@ Examples include:
 * Records must maintain the appropriate relationships with other records.
 * Users can only manage information permitted by their system role.
 
-See the `Business-Rules` folder for the complete list of rules.
+See the `Business Rules` folder for the complete list of rules.
 
 ## Repository Structure
 
 ```text
-Sprint-Cycle-II/
+Sprint Cycle 2/
 │
 ├── ERD/
-│   └── Sprint-II-ERD.png
+│   ├── Sprint-II-ERD.png          (current ERD)
+│   └── README.md                  (ERD notes + editable Mermaid source)
 │
-├── Data-Dictionary/
-│   └── Data-Dictionary.md
+├── Data Dictionary/
+│   ├── Data-Dictionary.md
+│   └── Rattler_Resource_Rescue_Data_Dictionary.xlsx
 │
-├── Business-Rules/
+├── Business Rules/
+│   ├── Business Rules Sprint II.docx
 │   └── Business-Rules.md
 │
+├── Campus_Resource_Rescue_ERD.png (earlier ERD draft)
 └── README.md
 ```
 
