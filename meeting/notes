@@ -184,3 +184,46 @@ screens for two use cases for each role, and Ondrea will implement a simple appl
 * Discussed using the team GitHub repository to organize and submit all Sprint Cycle II materials.
 * Agreed to review the database design as a team before submission.
 * Decided Isaiah is doing the Business Rules, Naser is doing the ERD, and Ondrea and Lloyd are doing the Data Dictionary.
+
+
+---
+
+### File 2: `Sprint Cycles/Sprint Cycle 3/Documentation/Meeting-Notes-Sprint-III.md`
+
+```markdown
+# Sprint Cycle III – Team Meeting Documentation Log
+
+**Project:** Rattler Resource Rescue System  
+**Scrum Master:** Isaiah  
+**Lead Database Engineer:** Lloyd Lewis Jr.  
+
+---
+
+## Meeting 1: Sprint III Kickoff & Design Review
+- **Date:** October 29, 2026
+- **Attendees:** Ondrea, Naser, Isaiah
+- **Discussion Topics:**
+  - Reviewed Sprint II ERD feedback and confirmed MySQL 8.0+ as our target database technology.
+  - Mapped functional requirements to database tables (Users, Items, Reservations, Events, Moderation).
+- **Decisions & Task Assignments:**
+  - **Lloyd**: Write core DDL schema script (`01_schema.sql`), triggers, and sample data.
+  - **Naser**: Update ERD layout to reflect associative tables and constraint types.
+  - **Ondrea**: Synchronize Data Dictionary Excel and Markdown versions with physical SQL types.
+  - **Isaiah**: Document functional use case mappings and business rules.
+
+---
+
+## Meeting 2: Schema Review, Query Testing & Presentation Prep
+- **Date:** November 2, 2026 
+- **Attendees:** Lloyd, Ondrea, Naser, Isaiah
+- **Discussion Topics:**
+  - Reviewed and verified `01_schema.sql`, `02_sample_data.sql`, and `03_queries.sql`.
+  - Executed clean database creation tests from scratch using the updated README setup script.
+  - Verified live error catching on `CHECK` constraints (campus email rejection and reservation expiration errors) and trigger enforcement (anti-hoarding policy).
+  - Confirmed sample data accuracy with realistic FAMU campus users, student orgs, and departments (no generic `User1`/`Item1` placeholding).
+  - Conducted presentation dry run covering the 13 required slides for Thursday's presentation.
+- **Decisions & Task Assignments:**
+  - **Lloyd (`LewisLloyd96`)**: Push final database scripts, queries, and setup documentation to GitHub.
+  - **Ondrea**: Finalize visual styling on presentation slides.
+  - **Naser**: Export high-resolution Sprint III ERD image for GitHub and slides.
+  - **Isaiah**: Package meeting documentation and coordinate submission prior to the November 4 deadline.
