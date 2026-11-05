@@ -77,7 +77,8 @@ INSERT INTO organization (organization_id, organization_type, name, location, co
   (4, 'Student Organization', 'FAMU Environmental Club',                       'Student Union, Room 214',       'envclub@famu.edu',  'Approved'),
   (5, 'Student Organization', 'Rattler Robotics Club',                         'Banneker Building, Lab B',      'robotics@famu.edu', 'Approved'),
   (6, 'Student Organization', 'Pre-Med Society',                               'Student Union, Room 118',       'premed@famu.edu',   'Pending'),
-  (7, 'Student Organization', 'FAMU Art Club',                                 'Student Union, Room 220',       'artclub@famu.edu',  'Approved');
+  (7, 'Student Organization', 'FAMU Student National Alumni Association',      'Benjamin Banneker, Room 120',   'famusnaa@famu.edu', 'Approved'),
+  (8, 'Student Organization', 'FAMU Art Club',                                 'Student Union, Room 220',       'artclub@famu.edu',  'Approved');
 
 INSERT INTO organization_member (organization_id, user_id, member_role, approved_at, is_active) VALUES
   (1, 4,  'Primary Contact', '2026-08-26 09:00', TRUE),
