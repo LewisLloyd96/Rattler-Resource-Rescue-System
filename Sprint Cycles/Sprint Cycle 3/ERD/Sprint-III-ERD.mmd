@@ -1,0 +1,221 @@
+---
+title: Rattler Resource Rescue System — Sprint III ERD (as implemented)
+---
+erDiagram
+    USER {
+        INT user_id PK
+        INT role_id FK
+        VARCHAR(80) first_name
+        VARCHAR(80) last_name
+        VARCHAR(255) email UK "changed"
+        DATETIME email_verified_at "optional, NEW"
+        VARCHAR(255) password_hash
+        VARCHAR(30) account_status
+        DATETIME created_at
+    }
+    ROLE {
+        INT role_id PK
+        VARCHAR(60) role_name UK
+    }
+    PERMISSION {
+        INT permission_id PK
+        VARCHAR(80) permission_code UK
+        TEXT description "optional"
+    }
+    ROLE_PERMISSION {
+        INT role_id PK,FK
+        INT permission_id PK,FK
+    }
+    ORGANIZATION {
+        INT organization_id PK
+        VARCHAR(30) organization_type
+        VARCHAR(150) name UK
+        VARCHAR(150) location "optional"
+        VARCHAR(255) contact_email "optional"
+        VARCHAR(30) status
+    }
+    ORGANIZATION_MEMBER {
+        INT membership_id PK
+        INT organization_id FK
+        INT user_id FK
+        VARCHAR(60) member_role
+        DATETIME approved_at "optional"
+        BOOLEAN is_active
+    }
+    AUDIT_LOG {
+        INT log_id PK "NEW"
+        INT actor_user_id FK "NEW"
+        INT target_user_id FK "optional, NEW"
+        VARCHAR(60) action "NEW"
+        TEXT justification "NEW"
+        DATETIME created_at "NEW"
+    }
+    NOTIFICATION {
+        INT notification_id PK
+        INT user_id FK
+        VARCHAR(50) notification_type
+        TEXT message
+        BOOLEAN is_read
+        DATETIME created_at
+    }
+    SYSTEM_SETTING {
+        VARCHAR(100) setting_key PK
+        TEXT setting_value
+        INT updated_by_user_id FK "optional"
+        DATETIME updated_at
+    }
+    CATEGORY {
+        INT category_id PK
+        VARCHAR(100) name UK
+        TEXT description "optional"
+        TEXT rules "optional"
+        BOOLEAN is_active
+    }
+    ITEM {
+        INT item_id PK
+        INT posted_by_user_id FK
+        INT owner_organization_id FK "optional"
+        INT category_id FK
+        VARCHAR(150) title
+        TEXT description
+        VARCHAR(40) item_condition
+        INT quantity "NEW"
+        VARCHAR(200) pickup_location
+        DECIMAL(10,2) estimated_value "optional"
+        VARCHAR(30) status "changed"
+        DATETIME created_at
+    }
+    ITEM_IMAGE {
+        INT image_id PK
+        INT item_id FK
+        VARCHAR(500) image_url
+        INT display_order
+    }
+    RESERVATION {
+        INT reservation_id PK
+        INT item_id FK
+        INT reserved_by_user_id FK
+        INT receiver_organization_id FK "optional"
+        DATETIME reserved_at
+        DATETIME expires_at
+        VARCHAR(30) status "changed"
+        TEXT pickup_note "optional"
+        INT open_item_id UK "optional, NEW"
+    }
+    EXCHANGE {
+        INT exchange_id PK
+        INT reservation_id FK,UK
+        DATETIME pickup_time
+        VARCHAR(200) pickup_location
+        DATETIME giver_confirmed_at "optional"
+        DATETIME receiver_confirmed_at "optional"
+        VARCHAR(30) status
+        DATETIME completed_at "optional"
+    }
+    MESSAGE {
+        INT message_id PK
+        INT sender_user_id FK
+        INT recipient_user_id FK
+        INT reservation_id FK "optional"
+        TEXT body
+        DATETIME sent_at
+        BOOLEAN is_read
+    }
+    COLLECTION_EVENT {
+        INT event_id PK
+        INT organization_id FK
+        INT created_by_user_id FK
+        VARCHAR(30) event_type
+        VARCHAR(150) title
+        TEXT description "optional"
+        TEXT participation_instructions "optional"
+        VARCHAR(200) location
+        DATETIME start_at
+        DATETIME end_at
+        VARCHAR(30) status
+    }
+    EVENT_CATEGORY {
+        INT event_id PK,FK
+        INT category_id PK,FK
+    }
+    EVENT_ITEM {
+        INT event_item_id PK
+        INT event_id FK
+        INT item_id FK,UK
+        INT contributor_user_id FK
+        VARCHAR(30) distribution_status
+        DATETIME received_at "optional"
+        DATETIME distributed_at "optional"
+    }
+    REPORT {
+        INT report_id PK
+        INT reporter_user_id FK
+        INT reported_user_id FK "optional"
+        INT reported_organization_id FK "optional"
+        INT item_id FK "optional"
+        INT exchange_id FK "optional"
+        INT event_id FK "optional"
+        VARCHAR(100) reason
+        TEXT details "optional"
+        VARCHAR(30) status
+        DATETIME created_at
+    }
+    MODERATION_CASE {
+        INT case_id PK
+        INT report_id FK,UK
+        INT assigned_to_user_id FK "optional"
+        INT escalated_to_user_id FK "optional"
+        DATETIME escalated_at "optional"
+        VARCHAR(30) status
+        TEXT findings "optional"
+        TEXT resolution "optional"
+        DATETIME closed_at "optional"
+    }
+    MODERATION_ACTION {
+        INT action_id PK
+        INT case_id FK
+        INT performed_by_user_id FK
+        VARCHAR(40) action_type
+        VARCHAR(255) reason "NEW"
+        DATETIME restriction_ends_at "optional"
+        TEXT notes "optional"
+        DATETIME created_at
+    }
+    USER ||--o{ AUDIT_LOG : "actor_user_id"
+    USER |o--o{ AUDIT_LOG : "target_user_id"
+    USER ||--o{ COLLECTION_EVENT : "created_by_user_id"
+    ORGANIZATION ||--o{ COLLECTION_EVENT : "organization_id"
+    CATEGORY ||--o{ EVENT_CATEGORY : "category_id"
+    COLLECTION_EVENT ||--o{ EVENT_CATEGORY : "event_id"
+    USER ||--o{ EVENT_ITEM : "contributor_user_id"
+    COLLECTION_EVENT ||--o{ EVENT_ITEM : "event_id"
+    ITEM ||--o| EVENT_ITEM : "item_id"
+    RESERVATION ||--o| EXCHANGE : "reservation_id"
+    CATEGORY ||--o{ ITEM : "category_id"
+    ORGANIZATION |o--o{ ITEM : "owner_organization_id"
+    USER ||--o{ ITEM : "posted_by_user_id"
+    ITEM ||--o{ ITEM_IMAGE : "item_id"
+    USER ||--o{ MESSAGE : "recipient_user_id"
+    RESERVATION |o--o{ MESSAGE : "reservation_id"
+    USER ||--o{ MESSAGE : "sender_user_id"
+    MODERATION_CASE ||--o{ MODERATION_ACTION : "case_id"
+    USER ||--o{ MODERATION_ACTION : "performed_by_user_id"
+    USER |o--o{ MODERATION_CASE : "assigned_to_user_id"
+    USER |o--o{ MODERATION_CASE : "escalated_to_user_id"
+    REPORT ||--o| MODERATION_CASE : "report_id"
+    USER ||--o{ NOTIFICATION : "user_id"
+    ORGANIZATION ||--o{ ORGANIZATION_MEMBER : "organization_id"
+    USER ||--o{ ORGANIZATION_MEMBER : "user_id"
+    COLLECTION_EVENT |o--o{ REPORT : "event_id"
+    EXCHANGE |o--o{ REPORT : "exchange_id"
+    ITEM |o--o{ REPORT : "item_id"
+    ORGANIZATION |o--o{ REPORT : "reported_organization_id"
+    USER ||--o{ REPORT : "reporter_user_id"
+    USER |o--o{ REPORT : "reported_user_id"
+    ITEM ||--o{ RESERVATION : "item_id"
+    ORGANIZATION |o--o{ RESERVATION : "receiver_organization_id"
+    USER ||--o{ RESERVATION : "reserved_by_user_id"
+    PERMISSION ||--o{ ROLE_PERMISSION : "permission_id"
+    ROLE ||--o{ ROLE_PERMISSION : "role_id"
+    USER |o--o{ SYSTEM_SETTING : "updated_by_user_id"
+    ROLE ||--o{ USER : "role_id"

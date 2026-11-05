@@ -1,0 +1,75 @@
+---
+title: Rattler Resource Rescue System — Users, Roles, Organizations & Audit
+---
+erDiagram
+    USER {
+        INT user_id PK
+        INT role_id FK
+        VARCHAR(80) first_name
+        VARCHAR(80) last_name
+        VARCHAR(255) email UK "changed"
+        DATETIME email_verified_at "optional, NEW"
+        VARCHAR(255) password_hash
+        VARCHAR(30) account_status
+        DATETIME created_at
+    }
+    ROLE {
+        INT role_id PK
+        VARCHAR(60) role_name UK
+    }
+    PERMISSION {
+        INT permission_id PK
+        VARCHAR(80) permission_code UK
+        TEXT description "optional"
+    }
+    ROLE_PERMISSION {
+        INT role_id PK,FK
+        INT permission_id PK,FK
+    }
+    ORGANIZATION {
+        INT organization_id PK
+        VARCHAR(30) organization_type
+        VARCHAR(150) name UK
+        VARCHAR(150) location "optional"
+        VARCHAR(255) contact_email "optional"
+        VARCHAR(30) status
+    }
+    ORGANIZATION_MEMBER {
+        INT membership_id PK
+        INT organization_id FK
+        INT user_id FK
+        VARCHAR(60) member_role
+        DATETIME approved_at "optional"
+        BOOLEAN is_active
+    }
+    AUDIT_LOG {
+        INT log_id PK "NEW"
+        INT actor_user_id FK "NEW"
+        INT target_user_id FK "optional, NEW"
+        VARCHAR(60) action "NEW"
+        TEXT justification "NEW"
+        DATETIME created_at "NEW"
+    }
+    NOTIFICATION {
+        INT notification_id PK
+        INT user_id FK
+        VARCHAR(50) notification_type
+        TEXT message
+        BOOLEAN is_read
+        DATETIME created_at
+    }
+    SYSTEM_SETTING {
+        VARCHAR(100) setting_key PK
+        TEXT setting_value
+        INT updated_by_user_id FK "optional"
+        DATETIME updated_at
+    }
+    USER ||--o{ AUDIT_LOG : "actor_user_id"
+    USER |o--o{ AUDIT_LOG : "target_user_id"
+    USER ||--o{ NOTIFICATION : "user_id"
+    ORGANIZATION ||--o{ ORGANIZATION_MEMBER : "organization_id"
+    USER ||--o{ ORGANIZATION_MEMBER : "user_id"
+    PERMISSION ||--o{ ROLE_PERMISSION : "permission_id"
+    ROLE ||--o{ ROLE_PERMISSION : "role_id"
+    USER |o--o{ SYSTEM_SETTING : "updated_by_user_id"
+    ROLE ||--o{ USER : "role_id"
