@@ -15,6 +15,7 @@ Sprint Cycle 3/
 │   └── tools/generate_docs.py rebuilds the data dictionary and ERD source from the live database
 ├── ERD/                       updated ERD (PDF best for viewing; PNG; Mermaid .mmd source) + four area diagrams
 ├── Data Dictionary/           updated data dictionary (Excel and Markdown), generated from the database
+├── Presentation/              Sprint III presentation (PDF)
 └── README.md
 ```
 
