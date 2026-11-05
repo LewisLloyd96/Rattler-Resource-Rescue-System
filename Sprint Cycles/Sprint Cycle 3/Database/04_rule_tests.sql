@@ -95,7 +95,10 @@ BEGIN
   BEGIN
     DECLARE CONTINUE HANDLER FOR SQLEXCEPTION GET DIAGNOSTICS CONDITION 1 @msg = MESSAGE_TEXT;
     SET @msg = NULL;
-    INSERT INTO reservation (item_id, reserved_by_user_id) VALUES (18, 16);  -- Tyrell is Suspended
+    SET @actor_user_id = 1, @justification = 'Rule test setup (rolled back)';
+    UPDATE user SET account_status = 'Suspended' WHERE user_id = 16;          -- make sure Tyrell is Suspended
+    SET @actor_user_id = NULL, @justification = NULL;
+    INSERT INTO reservation (item_id, reserved_by_user_id) VALUES (18, 16);
     INSERT INTO rule_test_result VALUES (8, 'Suspended accounts cannot reserve items', 'Trigger', 'reject', IF(@msg IS NULL, 'FAIL', 'PASS'), @msg);
   END;
 
@@ -216,10 +219,11 @@ BEGIN
     DECLARE CONTINUE HANDLER FOR SQLEXCEPTION GET DIAGNOSTICS CONDITION 1 @msg = MESSAGE_TEXT;
     SET @msg = NULL;
     INSERT INTO reservation (item_id, reserved_by_user_id) VALUES (18, 14);
-    SET @ok = (SELECT i.status = 'Reserved' AND r.expires_at = r.reserved_at + INTERVAL 48 HOUR
+    SET @hours = (SELECT CAST(setting_value AS UNSIGNED) FROM system_setting WHERE setting_key = 'reservation_expiration_hours');
+    SET @ok = (SELECT i.status = 'Reserved' AND r.expires_at = r.reserved_at + INTERVAL @hours HOUR
                  FROM reservation r JOIN item i ON i.item_id = r.item_id
                 WHERE r.reservation_id = LAST_INSERT_ID());
-    INSERT INTO rule_test_result VALUES (22, 'Valid reservation: accepted, 48 h expiry set, item marked Reserved', 'Triggers', 'accept',
+    INSERT INTO rule_test_result VALUES (22, 'Valid reservation: accepted, expiry set from settings, item Reserved', 'Triggers', 'accept',
       IF(@msg IS NULL AND @ok, 'PASS', 'FAIL'), COALESCE(@msg, 'Accepted'));
   END;
 

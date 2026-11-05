@@ -1,30 +1,30 @@
 === 04_rule_tests.sql (run on freshly loaded data) ===
-+------+--------------------------------------------------------------------+------------------------------+----------+--------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| #    | rule_tested                                                        | enforced_by                  | expected | result | mysql_message                                                                                                                                                                                        |
-+------+--------------------------------------------------------------------+------------------------------+----------+--------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-|    1 | A user email must be unique                                        | UNIQUE constraint            | reject   | PASS   | Duplicate entry 'jordan2.davis@famu.edu' for key 'user.uq_user_email'                                                                                                                                |
-|    2 | Accounts require a campus (@famu.edu) email                        | CHECK constraint             | reject   | PASS   | Check constraint 'chk_user_campus_email' is violated.                                                                                                                                                |
-|    3 | A verified campus email is required to reserve                     | Trigger                      | reject   | PASS   | Rule: a verified campus email is required to reserve items.                                                                                                                                          |
-|    4 | Only Available items can be reserved                               | Trigger                      | reject   | PASS   | Rule: only Available items can be reserved.                                                                                                                                                          |
-|    5 | An item can have only one open reservation                         | Unique index (generated col) | reject   | PASS   | Duplicate entry '2' for key 'reservation.uq_one_open_reservation_per_item'                                                                                                                           |
-|    6 | Anti-hoarding: one open personal reservation per category          | Trigger                      | reject   | PASS   | Rule (anti-hoarding): only one open personal reservation per category.                                                                                                                               |
-|    7 | Users cannot reserve their own listings                            | Trigger                      | reject   | PASS   | Rule: users cannot reserve their own listings.                                                                                                                                                       |
-|    8 | Suspended accounts cannot reserve items                            | Trigger                      | reject   | PASS   | Rule: suspended or inactive accounts cannot reserve items.                                                                                                                                           |
-|    9 | A reservation must expire after it was made                        | CHECK constraint             | reject   | PASS   | Check constraint 'chk_res_expires' is violated.                                                                                                                                                      |
-|   10 | An exchange completes only when both sides confirm                 | CHECK constraint             | reject   | PASS   | Check constraint 'chk_exchange_both_confirmed' is violated.                                                                                                                                          |
-|   11 | One exchange per reservation (one-to-one)                          | UNIQUE constraint            | reject   | PASS   | Duplicate entry '6' for key 'exchange.uq_exchange_reservation'                                                                                                                                       |
-|   12 | Every item must belong to an existing category                     | FOREIGN KEY                  | reject   | PASS   | Cannot add or update a child row: a foreign key constraint fails (`rattler_resource_rescue`.`item`, CONSTRAINT `fk_item_category` FOREIGN KEY (`category_id`) REFERENCES `category` (`category_id`)) |
-|   13 | Item status must be a defined status                               | CHECK constraint             | reject   | PASS   | Check constraint 'chk_item_status' is violated.                                                                                                                                                      |
-|   14 | A report must name what is being reported                          | CHECK constraint             | reject   | PASS   | Check constraint 'chk_report_has_target' is violated.                                                                                                                                                |
-|   15 | A moderation case cannot close without a resolution                | CHECK constraint             | reject   | PASS   | Check constraint 'chk_case_closed_has_resolution' is violated.                                                                                                                                       |
-|   16 | Restrictions must be temporary (need an end date)                  | CHECK constraint             | reject   | PASS   | Check constraint 'chk_action_restriction_end' is violated.                                                                                                                                           |
-|   17 | Every moderation action needs a reason                             | NOT NULL                     | reject   | PASS   | Field 'reason' doesn't have a default value                                                                                                                                                          |
-|   18 | Only approved student organizations host events                    | Trigger                      | reject   | PASS   | Rule: only approved student organizations can host collection events.                                                                                                                                |
-|   19 | An event must end after it starts                                  | CHECK constraint             | reject   | PASS   | Check constraint 'chk_event_dates' is violated.                                                                                                                                                      |
-|   20 | Account status changes need an admin and justification             | Trigger + AUDIT_LOG          | reject   | PASS   | Rule: account status changes need @actor_user_id and @justification.                                                                                                                                 |
-|   21 | Users cannot message themselves                                    | CHECK constraint             | reject   | PASS   | Check constraint 'chk_message_not_self' is violated.                                                                                                                                                 |
-|   22 | Valid reservation: accepted, 48 h expiry set, item marked Reserved | Triggers                     | accept   | PASS   | Accepted                                                                                                                                                                                             |
-+------+--------------------------------------------------------------------+------------------------------+----------+--------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
++------+----------------------------------------------------------------------+------------------------------+----------+--------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| #    | rule_tested                                                          | enforced_by                  | expected | result | mysql_message                                                                                                                                                                                        |
++------+----------------------------------------------------------------------+------------------------------+----------+--------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|    1 | A user email must be unique                                          | UNIQUE constraint            | reject   | PASS   | Duplicate entry 'jordan2.davis@famu.edu' for key 'user.uq_user_email'                                                                                                                                |
+|    2 | Accounts require a campus (@famu.edu) email                          | CHECK constraint             | reject   | PASS   | Check constraint 'chk_user_campus_email' is violated.                                                                                                                                                |
+|    3 | A verified campus email is required to reserve                       | Trigger                      | reject   | PASS   | Rule: a verified campus email is required to reserve items.                                                                                                                                          |
+|    4 | Only Available items can be reserved                                 | Trigger                      | reject   | PASS   | Rule: only Available items can be reserved.                                                                                                                                                          |
+|    5 | An item can have only one open reservation                           | Unique index (generated col) | reject   | PASS   | Duplicate entry '2' for key 'reservation.uq_one_open_reservation_per_item'                                                                                                                           |
+|    6 | Anti-hoarding: one open personal reservation per category            | Trigger                      | reject   | PASS   | Rule (anti-hoarding): only one open personal reservation per category.                                                                                                                               |
+|    7 | Users cannot reserve their own listings                              | Trigger                      | reject   | PASS   | Rule: users cannot reserve their own listings.                                                                                                                                                       |
+|    8 | Suspended accounts cannot reserve items                              | Trigger                      | reject   | PASS   | Rule: suspended or inactive accounts cannot reserve items.                                                                                                                                           |
+|    9 | A reservation must expire after it was made                          | CHECK constraint             | reject   | PASS   | Check constraint 'chk_res_expires' is violated.                                                                                                                                                      |
+|   10 | An exchange completes only when both sides confirm                   | CHECK constraint             | reject   | PASS   | Check constraint 'chk_exchange_both_confirmed' is violated.                                                                                                                                          |
+|   11 | One exchange per reservation (one-to-one)                            | UNIQUE constraint            | reject   | PASS   | Duplicate entry '6' for key 'exchange.uq_exchange_reservation'                                                                                                                                       |
+|   12 | Every item must belong to an existing category                       | FOREIGN KEY                  | reject   | PASS   | Cannot add or update a child row: a foreign key constraint fails (`rattler_resource_rescue`.`item`, CONSTRAINT `fk_item_category` FOREIGN KEY (`category_id`) REFERENCES `category` (`category_id`)) |
+|   13 | Item status must be a defined status                                 | CHECK constraint             | reject   | PASS   | Check constraint 'chk_item_status' is violated.                                                                                                                                                      |
+|   14 | A report must name what is being reported                            | CHECK constraint             | reject   | PASS   | Check constraint 'chk_report_has_target' is violated.                                                                                                                                                |
+|   15 | A moderation case cannot close without a resolution                  | CHECK constraint             | reject   | PASS   | Check constraint 'chk_case_closed_has_resolution' is violated.                                                                                                                                       |
+|   16 | Restrictions must be temporary (need an end date)                    | CHECK constraint             | reject   | PASS   | Check constraint 'chk_action_restriction_end' is violated.                                                                                                                                           |
+|   17 | Every moderation action needs a reason                               | NOT NULL                     | reject   | PASS   | Field 'reason' doesn't have a default value                                                                                                                                                          |
+|   18 | Only approved student organizations host events                      | Trigger                      | reject   | PASS   | Rule: only approved student organizations can host collection events.                                                                                                                                |
+|   19 | An event must end after it starts                                    | CHECK constraint             | reject   | PASS   | Check constraint 'chk_event_dates' is violated.                                                                                                                                                      |
+|   20 | Account status changes need an admin and justification               | Trigger + AUDIT_LOG          | reject   | PASS   | Rule: account status changes need @actor_user_id and @justification.                                                                                                                                 |
+|   21 | Users cannot message themselves                                      | CHECK constraint             | reject   | PASS   | Check constraint 'chk_message_not_self' is violated.                                                                                                                                                 |
+|   22 | Valid reservation: accepted, expiry set from settings, item Reserved | Triggers                     | accept   | PASS   | Accepted                                                                                                                                                                                             |
++------+----------------------------------------------------------------------+------------------------------+----------+--------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 +----------------------------+
 | summary                    |
 +----------------------------+
@@ -133,7 +133,7 @@ ORDER BY reserved_at DESC
 +----------------+--------------------------------+-------------+--------------+---------+---------------------+-----------------+---------------------+
 | reservation_id | item                           | category    | given_by     | status  | reserved_at         | exchange_status | pickup_time         |
 +----------------+--------------------------------+-------------+--------------+---------+---------------------+-----------------+---------------------+
-|              6 | TI-84 Plus Graphing Calculator | Electronics | Elijah Moore | Active  | 2026-11-04 22:33:23 | Scheduled       | 2026-11-06 03:33:23 |
+|              6 | TI-84 Plus Graphing Calculator | Electronics | Elijah Moore | Active  | 2026-11-05 15:01:56 | Scheduled       | 2026-11-06 20:01:56 |
 |              5 | Black Winter Coat (Men's M)    | Clothing    | Elijah Moore | Expired | 2026-10-18 11:00:00 | NULL            | NULL                |
 +----------------+--------------------------------+-------------+--------------+---------+---------------------+-----------------+---------------------+
 --------------
@@ -251,7 +251,7 @@ WHERE m.recipient_user_id = (SELECT user_id FROM user WHERE email = 'jordan2.dav
 +--------------+--------------------------------+-----------------------------------------------------+---------------------+
 | from_user    | about_item                     | body                                                | sent_at             |
 +--------------+--------------------------------+-----------------------------------------------------+---------------------+
-| Elijah Moore | TI-84 Plus Graphing Calculator | Noon works. I will be at the Coleman Library lobby. | 2026-11-05 00:33:23 |
+| Elijah Moore | TI-84 Plus Graphing Calculator | Noon works. I will be at the Coleman Library lobby. | 2026-11-05 17:01:56 |
 +--------------+--------------------------------+-----------------------------------------------------+---------------------+
 --------------
 SELECT r.role_name, COUNT(*) AS permissions,
@@ -296,7 +296,7 @@ SELECT item_id, title, status, created_at FROM item WHERE item_id = @new_item_id
 +---------+--------------------+----------------+---------------------+
 | item_id | title              | status         | created_at          |
 +---------+--------------------+----------------+---------------------+
-|      28 | Folding Desk Chair | Pending Review | 2026-11-05 03:33:23 |
+|      28 | Folding Desk Chair | Pending Review | 2026-11-05 20:01:57 |
 +---------+--------------------+----------------+---------------------+
 --------------
 UPDATE item SET status = 'Available' WHERE item_id = @new_item_id
@@ -311,7 +311,7 @@ CALL reserve_item(@new_item_id,
 +----------------+--------+---------------------+---------------------+-----------------+--------------------------+--------------+---------+--------------------+-----------+-------------+-----------------+-------------+
 | reservation_id | status | reserved_at         | expires_at          | reserved_by     | reserved_by_email        | received_for | item_id | item               | category  | given_by    | exchange_status | pickup_time |
 +----------------+--------+---------------------+---------------------+-----------------+--------------------------+--------------+---------+--------------------+-----------+-------------+-----------------+-------------+
-|             14 | Active | 2026-11-05 03:33:23 | 2026-11-07 03:33:23 | Christopher Lee | christopher.lee@famu.edu | NULL         |      28 | Folding Desk Chair | Furniture | Imani Scott | NULL            | NULL        |
+|             14 | Active | 2026-11-05 20:01:57 | 2026-11-07 20:01:57 | Christopher Lee | christopher.lee@famu.edu | NULL         |      28 | Folding Desk Chair | Furniture | Imani Scott | NULL            | NULL        |
 +----------------+--------+---------------------+---------------------+-----------------+--------------------------+--------------+---------+--------------------+-----------+-------------+-----------------+-------------+
 --------------
 SELECT item_id, title, status FROM item WHERE item_id = @new_item_id
@@ -362,7 +362,7 @@ WHERE x.exchange_id = 5
 +-------------+----------------+---------------------+-------------------+------------+
 | exchange_id | exchange_after | completed_at        | reservation_after | item_after |
 +-------------+----------------+---------------------+-------------------+------------+
-|           5 | Completed      | 2026-11-05 03:33:23 | Completed         | Completed  |
+|           5 | Completed      | 2026-11-05 20:01:57 | Completed         | Completed  |
 +-------------+----------------+---------------------+-------------------+------------+
 --------------
 UPDATE reservation SET status = 'Cancelled' WHERE reservation_id = 9
@@ -390,7 +390,7 @@ SELECT * FROM system_setting WHERE setting_key = 'reservation_expiration_hours'
 +------------------------------+---------------+--------------------+---------------------+
 | setting_key                  | setting_value | updated_by_user_id | updated_at          |
 +------------------------------+---------------+--------------------+---------------------+
-| reservation_expiration_hours | 72            |                  1 | 2026-11-05 03:33:23 |
+| reservation_expiration_hours | 72            |                  1 | 2026-11-05 20:01:57 |
 +------------------------------+---------------+--------------------+---------------------+
 --------------
 SET @actor_user_id = 1
@@ -424,8 +424,8 @@ ORDER BY a.log_id
 +--------+---------------+----------------+-------------------------------------+---------------------------------------------------------------------------------------------------+---------------------+
 | log_id | administrator | account        | action                              | justification                                                                                     | created_at          |
 +--------+---------------+----------------+-------------------------------------+---------------------------------------------------------------------------------------------------+---------------------+
-|      1 | Angela Brooks | Tyrell Jackson | account_status: Active -> Suspended | Escalated case #2: three confirmed no-shows in October. Suspended pending student conduct review. | 2026-11-05 03:33:23 |
-|      2 | Angela Brooks | Tyrell Jackson | account_status: Suspended -> Active | Student conduct review completed; reservation restriction remains until 2026-11-13.               | 2026-11-05 03:33:23 |
+|      1 | Angela Brooks | Tyrell Jackson | account_status: Active -> Suspended | Escalated case #2: three confirmed no-shows in October. Suspended pending student conduct review. | 2026-11-05 20:01:56 |
+|      2 | Angela Brooks | Tyrell Jackson | account_status: Suspended -> Active | Student conduct review completed; reservation restriction remains until 2026-11-13.               | 2026-11-05 20:01:57 |
 +--------+---------------+----------------+-------------------------------------+---------------------------------------------------------------------------------------------------+---------------------+
 --------------
 SELECT o.name AS organization, o.organization_type,
@@ -492,5 +492,5 @@ ORDER BY activity_date
 | Given                | Calculus: Early Transcendentals, 8th Edition | Completed | 2026-10-05 10:00:00 |
 | Reserved             | Black Winter Coat (Men's M)                  | Expired   | 2026-10-18 11:00:00 |
 | Contributed to drive | Twin XL Bedding Set                          | Available | 2026-10-23 15:30:00 |
-| Reserved             | TI-84 Plus Graphing Calculator               | Active    | 2026-11-04 22:33:23 |
+| Reserved             | TI-84 Plus Graphing Calculator               | Active    | 2026-11-05 15:01:56 |
 +----------------------+----------------------------------------------+-----------+---------------------+
