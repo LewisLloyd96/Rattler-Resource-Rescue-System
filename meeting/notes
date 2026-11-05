@@ -214,7 +214,7 @@ screens for two use cases for each role, and Ondrea will implement a simple appl
 ---
 
 ## Meeting 2: Schema Review, Query Testing & Presentation Prep
-- **Date:** November 2, 2026 
+- **Date:** November 4, 2026 
 - **Attendees:** Lloyd, Ondrea, Naser, Isaiah
 - **Discussion Topics:**
   - Reviewed and verified `01_schema.sql`, `02_sample_data.sql`, and `03_queries.sql`.
