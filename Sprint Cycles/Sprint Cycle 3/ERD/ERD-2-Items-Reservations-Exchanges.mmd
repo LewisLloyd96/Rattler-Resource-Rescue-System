@@ -1,0 +1,78 @@
+---
+title: Rattler Resource Rescue System — Items, Reservations, Exchanges & Messages
+---
+erDiagram
+    CATEGORY {
+        INT category_id PK
+        VARCHAR(100) name UK
+        TEXT description "optional"
+        TEXT rules "optional"
+        BOOLEAN is_active
+    }
+    ITEM {
+        INT item_id PK
+        INT posted_by_user_id FK
+        INT owner_organization_id FK "optional"
+        INT category_id FK
+        VARCHAR(150) title
+        TEXT description
+        VARCHAR(40) item_condition
+        INT quantity "NEW"
+        VARCHAR(200) pickup_location
+        DECIMAL(10,2) estimated_value "optional"
+        VARCHAR(30) status "changed"
+        DATETIME created_at
+    }
+    ITEM_IMAGE {
+        INT image_id PK
+        INT item_id FK
+        VARCHAR(500) image_url
+        INT display_order
+    }
+    RESERVATION {
+        INT reservation_id PK
+        INT item_id FK
+        INT reserved_by_user_id FK
+        INT receiver_organization_id FK "optional"
+        DATETIME reserved_at
+        DATETIME expires_at
+        VARCHAR(30) status "changed"
+        TEXT pickup_note "optional"
+        INT open_item_id UK "optional, NEW"
+    }
+    EXCHANGE {
+        INT exchange_id PK
+        INT reservation_id FK,UK
+        DATETIME pickup_time
+        VARCHAR(200) pickup_location
+        DATETIME giver_confirmed_at "optional"
+        DATETIME receiver_confirmed_at "optional"
+        VARCHAR(30) status
+        DATETIME completed_at "optional"
+    }
+    MESSAGE {
+        INT message_id PK
+        INT sender_user_id FK
+        INT recipient_user_id FK
+        INT reservation_id FK "optional"
+        TEXT body
+        DATETIME sent_at
+        BOOLEAN is_read
+    }
+    USER {
+        INT user_id PK
+    }
+    ORGANIZATION {
+        INT organization_id PK
+    }
+    RESERVATION ||--o| EXCHANGE : "reservation_id"
+    CATEGORY ||--o{ ITEM : "category_id"
+    ORGANIZATION |o--o{ ITEM : "owner_organization_id"
+    USER ||--o{ ITEM : "posted_by_user_id"
+    ITEM ||--o{ ITEM_IMAGE : "item_id"
+    USER ||--o{ MESSAGE : "recipient_user_id"
+    RESERVATION |o--o{ MESSAGE : "reservation_id"
+    USER ||--o{ MESSAGE : "sender_user_id"
+    ITEM ||--o{ RESERVATION : "item_id"
+    ORGANIZATION |o--o{ RESERVATION : "receiver_organization_id"
+    USER ||--o{ RESERVATION : "reserved_by_user_id"

@@ -1,0 +1,496 @@
+=== 04_rule_tests.sql (run on freshly loaded data) ===
++------+--------------------------------------------------------------------+------------------------------+----------+--------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| #    | rule_tested                                                        | enforced_by                  | expected | result | mysql_message                                                                                                                                                                                        |
++------+--------------------------------------------------------------------+------------------------------+----------+--------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|    1 | A user email must be unique                                        | UNIQUE constraint            | reject   | PASS   | Duplicate entry 'jordan2.davis@famu.edu' for key 'user.uq_user_email'                                                                                                                                |
+|    2 | Accounts require a campus (@famu.edu) email                        | CHECK constraint             | reject   | PASS   | Check constraint 'chk_user_campus_email' is violated.                                                                                                                                                |
+|    3 | A verified campus email is required to reserve                     | Trigger                      | reject   | PASS   | Rule: a verified campus email is required to reserve items.                                                                                                                                          |
+|    4 | Only Available items can be reserved                               | Trigger                      | reject   | PASS   | Rule: only Available items can be reserved.                                                                                                                                                          |
+|    5 | An item can have only one open reservation                         | Unique index (generated col) | reject   | PASS   | Duplicate entry '2' for key 'reservation.uq_one_open_reservation_per_item'                                                                                                                           |
+|    6 | Anti-hoarding: one open personal reservation per category          | Trigger                      | reject   | PASS   | Rule (anti-hoarding): only one open personal reservation per category.                                                                                                                               |
+|    7 | Users cannot reserve their own listings                            | Trigger                      | reject   | PASS   | Rule: users cannot reserve their own listings.                                                                                                                                                       |
+|    8 | Suspended accounts cannot reserve items                            | Trigger                      | reject   | PASS   | Rule: suspended or inactive accounts cannot reserve items.                                                                                                                                           |
+|    9 | A reservation must expire after it was made                        | CHECK constraint             | reject   | PASS   | Check constraint 'chk_res_expires' is violated.                                                                                                                                                      |
+|   10 | An exchange completes only when both sides confirm                 | CHECK constraint             | reject   | PASS   | Check constraint 'chk_exchange_both_confirmed' is violated.                                                                                                                                          |
+|   11 | One exchange per reservation (one-to-one)                          | UNIQUE constraint            | reject   | PASS   | Duplicate entry '6' for key 'exchange.uq_exchange_reservation'                                                                                                                                       |
+|   12 | Every item must belong to an existing category                     | FOREIGN KEY                  | reject   | PASS   | Cannot add or update a child row: a foreign key constraint fails (`rattler_resource_rescue`.`item`, CONSTRAINT `fk_item_category` FOREIGN KEY (`category_id`) REFERENCES `category` (`category_id`)) |
+|   13 | Item status must be a defined status                               | CHECK constraint             | reject   | PASS   | Check constraint 'chk_item_status' is violated.                                                                                                                                                      |
+|   14 | A report must name what is being reported                          | CHECK constraint             | reject   | PASS   | Check constraint 'chk_report_has_target' is violated.                                                                                                                                                |
+|   15 | A moderation case cannot close without a resolution                | CHECK constraint             | reject   | PASS   | Check constraint 'chk_case_closed_has_resolution' is violated.                                                                                                                                       |
+|   16 | Restrictions must be temporary (need an end date)                  | CHECK constraint             | reject   | PASS   | Check constraint 'chk_action_restriction_end' is violated.                                                                                                                                           |
+|   17 | Every moderation action needs a reason                             | NOT NULL                     | reject   | PASS   | Field 'reason' doesn't have a default value                                                                                                                                                          |
+|   18 | Only approved student organizations host events                    | Trigger                      | reject   | PASS   | Rule: only approved student organizations can host collection events.                                                                                                                                |
+|   19 | An event must end after it starts                                  | CHECK constraint             | reject   | PASS   | Check constraint 'chk_event_dates' is violated.                                                                                                                                                      |
+|   20 | Account status changes need an admin and justification             | Trigger + AUDIT_LOG          | reject   | PASS   | Rule: account status changes need @actor_user_id and @justification.                                                                                                                                 |
+|   21 | Users cannot message themselves                                    | CHECK constraint             | reject   | PASS   | Check constraint 'chk_message_not_self' is violated.                                                                                                                                                 |
+|   22 | Valid reservation: accepted, 48 h expiry set, item marked Reserved | Triggers                     | accept   | PASS   | Accepted                                                                                                                                                                                             |
++------+--------------------------------------------------------------------+------------------------------+----------+--------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
++----------------------------+
+| summary                    |
++----------------------------+
+| 22 of 22 rule tests passed |
++----------------------------+
+
+=== 03_queries.sql ===
+--------------
+SELECT u.user_id, CONCAT(u.first_name, ' ', u.last_name) AS name, u.email,
+       r.role_name, u.account_status
+FROM user u
+JOIN role r ON r.role_id = u.role_id
+WHERE u.last_name LIKE 'Ja%' OR u.email LIKE 'jordan%'
+--------------
+
++---------+----------------+-------------------------+-------------+----------------+
+| user_id | name           | email                   | role_name   | account_status |
++---------+----------------+-------------------------+-------------+----------------+
+|      10 | Jordan Davis   | jordan2.davis@famu.edu  | Campus User | Active         |
+|      16 | Tyrell Jackson | tyrell.jackson@famu.edu | Campus User | Suspended      |
++---------+----------------+-------------------------+-------------+----------------+
+--------------
+SELECT item_id, title, item_condition, quantity, pickup_location, owner_name, owner_type
+FROM v_available_items
+WHERE category = 'Dorm Essentials'
+ORDER BY created_at DESC
+--------------
+
++---------+-----------------------------+----------------+----------+-------------------------------+-------------------------+----------------------+
+| item_id | title                       | item_condition | quantity | pickup_location               | owner_name              | owner_type           |
++---------+-----------------------------+----------------+----------+-------------------------------+-------------------------+----------------------+
+|      24 | Twin XL Bedding Set         | Like New       |        1 | Gibbs Hall drop-off table     | FAMU Environmental Club | Student Organization |
+|      20 | 700W Microwave              | Good           |        1 | Paddyfoote Complex front desk | Jordan Davis            | Individual           |
+|      15 | Reusable Water Bottles      | New            |       30 | Student Union, Room 214       | FAMU Environmental Club | Student Organization |
+|       5 | LED Desk Lamp with USB Port | Like New       |        1 | Paddyfoote Complex front desk | Jordan Davis            | Individual           |
++---------+-----------------------------+----------------+----------+-------------------------------+-------------------------+----------------------+
+--------------
+SELECT i.item_id, i.title, c.name AS category,
+       ROUND(MATCH(i.title, i.description) AGAINST ('desk lamp table'), 3) AS relevance
+FROM item i
+JOIN category c ON c.category_id = i.category_id
+WHERE i.status = 'Available'
+  AND MATCH(i.title, i.description) AGAINST ('desk lamp table')
+ORDER BY relevance DESC
+--------------
+
++---------+-----------------------------+-----------------+-----------+
+| item_id | title                       | category        | relevance |
++---------+-----------------------------+-----------------+-----------+
+|       5 | LED Desk Lamp with USB Port | Dorm Essentials |     3.243 |
++---------+-----------------------------+-----------------+-----------+
+--------------
+SELECT title, category, item_condition, estimated_value, pickup_location
+FROM v_available_items
+WHERE item_condition IN ('New', 'Like New') AND estimated_value <= 100
+ORDER BY estimated_value
+--------------
+
++--------------------------------+------------------+----------------+-----------------+-------------------------------+
+| title                          | category         | item_condition | estimated_value | pickup_location               |
++--------------------------------+------------------+----------------+-----------------+-------------------------------+
+| Lab Notebook Pack (5)          | School Supplies  | New            |           12.00 | Student Union food court      |
+| LED Desk Lamp with USB Port    | Dorm Essentials  | Like New       |           20.00 | Paddyfoote Complex front desk |
+| Adjustable Laptop Stand        | Office Equipment | Like New       |           25.00 | Gibbs Hall lobby              |
+| Twin XL Bedding Set            | Dorm Essentials  | Like New       |           35.00 | Gibbs Hall drop-off table     |
+| Campbell Biology, 12th Edition | Textbooks        | Like New       |           60.00 | Student Union food court      |
++--------------------------------+------------------+----------------+-----------------+-------------------------------+
+--------------
+SELECT i.item_id, i.title, c.name AS category, i.status, i.created_at
+FROM item i
+JOIN category c ON c.category_id = i.category_id
+WHERE i.posted_by_user_id = (SELECT user_id FROM user WHERE email = 'jordan2.davis@famu.edu')
+ORDER BY i.created_at
+--------------
+
++---------+----------------------------------------------+-----------------+-----------+---------------------+
+| item_id | title                                        | category        | status    | created_at          |
++---------+----------------------------------------------+-----------------+-----------+---------------------+
+|       1 | Calculus: Early Transcendentals, 8th Edition | Textbooks       | Completed | 2026-10-01 12:00:00 |
+|       5 | LED Desk Lamp with USB Port                  | Dorm Essentials | Available | 2026-10-05 19:00:00 |
+|      20 | 700W Microwave                               | Dorm Essentials | Available | 2026-10-15 20:10:00 |
+|      24 | Twin XL Bedding Set                          | Dorm Essentials | Available | 2026-10-23 15:00:00 |
++---------+----------------------------------------------+-----------------+-----------+---------------------+
+--------------
+SELECT i.item_id, i.title, c.name AS category,
+       CONCAT(u.first_name, ' ', u.last_name) AS posted_by, i.created_at
+FROM item i
+JOIN category c ON c.category_id = i.category_id
+JOIN user u     ON u.user_id = i.posted_by_user_id
+WHERE i.status = 'Pending Review'
+--------------
+
++---------+-------------------------+---------------+-----------------+---------------------+
+| item_id | title                   | category      | posted_by       | created_at          |
++---------+-------------------------+---------------+-----------------+---------------------+
+|      26 | TI-83 Plus Calculator   | Electronics   | Christopher Lee | 2026-11-03 10:00:00 |
+|      11 | Borosilicate Beaker Set | Lab Equipment | Tanya Mitchell  | 2026-11-04 16:00:00 |
++---------+-------------------------+---------------+-----------------+---------------------+
+--------------
+SELECT reservation_id, item, category, given_by, status, reserved_at, exchange_status, pickup_time
+FROM v_reservation_details
+WHERE reserved_by_email = 'jordan2.davis@famu.edu'
+ORDER BY reserved_at DESC
+--------------
+
++----------------+--------------------------------+-------------+--------------+---------+---------------------+-----------------+---------------------+
+| reservation_id | item                           | category    | given_by     | status  | reserved_at         | exchange_status | pickup_time         |
++----------------+--------------------------------+-------------+--------------+---------+---------------------+-----------------+---------------------+
+|              6 | TI-84 Plus Graphing Calculator | Electronics | Elijah Moore | Active  | 2026-11-04 22:33:23 | Scheduled       | 2026-11-06 03:33:23 |
+|              5 | Black Winter Coat (Men's M)    | Clothing    | Elijah Moore | Expired | 2026-10-18 11:00:00 | NULL            | NULL                |
++----------------+--------------------------------+-------------+--------------+---------+---------------------+-----------------+---------------------+
+--------------
+SELECT i.item_id, i.title, i.quantity, i.status, i.estimated_value,
+       CONCAT(ru.first_name, ' ', ru.last_name) AS reserved_by,
+       ro.name AS reserved_for
+FROM item i
+JOIN organization o        ON o.organization_id = i.owner_organization_id
+LEFT JOIN reservation r    ON r.item_id = i.item_id AND r.status IN ('Pending', 'Active')
+LEFT JOIN user ru          ON ru.user_id = r.reserved_by_user_id
+LEFT JOIN organization ro  ON ro.organization_id = r.receiver_organization_id
+WHERE o.name = 'Department of Computer & Information Sciences'
+ORDER BY i.item_id
+--------------
+
++---------+--------------------------------------+----------+-----------+-----------------+----------------+-----------------------+
+| item_id | title                                | quantity | status    | estimated_value | reserved_by    | reserved_for          |
++---------+--------------------------------------+----------+-----------+-----------------+----------------+-----------------------+
+|       6 | Dell OptiPlex 7070 Desktop Computers |        4 | Completed |          600.00 | NULL           | NULL                  |
+|       7 | 24-inch Dell Monitors                |        6 | Reserved  |          300.00 | Tanya Mitchell | Department of Biology |
+|       8 | Ergonomic Office Chairs              |        5 | Available |          250.00 | NULL           | NULL                  |
++---------+--------------------------------------+----------+-----------+-----------------+----------------+-----------------------+
+--------------
+SELECT o.name AS organization, o.organization_type, o.status AS org_status,
+       CONCAT(u.first_name, ' ', u.last_name) AS representative, u.email,
+       m.member_role, m.approved_at
+FROM organization o
+JOIN organization_member m ON m.organization_id = o.organization_id AND m.is_active
+JOIN user u                ON u.user_id = m.user_id
+ORDER BY o.organization_type, o.name, m.member_role
+--------------
+
++-----------------------------------------------+----------------------+------------+------------------+---------------------------+-----------------+---------------------+
+| organization                                  | organization_type    | org_status | representative   | email                     | member_role     | approved_at         |
++-----------------------------------------------+----------------------+------------+------------------+---------------------------+-----------------+---------------------+
+| Coleman Library                               | Department           | Approved   | Gregory Lane     | gregory.lane@famu.edu     | Primary Contact | 2026-08-28 09:00:00 |
+| Department of Biology                         | Department           | Approved   | Tanya Mitchell   | tanya.mitchell@famu.edu   | Primary Contact | 2026-08-27 09:00:00 |
+| Department of Computer & Information Sciences | Department           | Approved   | Robert Hayes     | robert.hayes@famu.edu     | Primary Contact | 2026-08-26 09:00:00 |
+| FAMU Environmental Club                       | Student Organization | Approved   | Jasmine Carter   | jasmine1.carter@famu.edu  | Primary Contact | 2026-09-03 10:00:00 |
+| FAMU Environmental Club                       | Student Organization | Approved   | Brianna Harris   | brianna.harris@famu.edu   | Representative  | 2026-09-20 14:00:00 |
+| Pre-Med Society                               | Student Organization | Pending    | Aaliyah Robinson | aaliyah.robinson@famu.edu | Primary Contact | NULL                |
+| Rattler Robotics Club                         | Student Organization | Approved   | Darnell Thomas   | darnell.thomas@famu.edu   | Primary Contact | 2026-09-04 10:00:00 |
++-----------------------------------------------+----------------------+------------+------------------+---------------------------+-----------------+---------------------+
+--------------
+SELECT e.title AS event, i.title AS item, c.name AS category,
+       CONCAT(u.first_name, ' ', u.last_name) AS contributor,
+       ei.distribution_status, ei.received_at, ei.distributed_at
+FROM collection_event e
+JOIN event_item ei ON ei.event_id = e.event_id
+JOIN item i        ON i.item_id = ei.item_id
+JOIN category c    ON c.category_id = i.category_id
+JOIN user u        ON u.user_id = ei.contributor_user_id
+WHERE e.title = 'Fall Move-Out Collection Drive'
+--------------
+
++--------------------------------+---------------------------+-----------------+-----------------+---------------------+---------------------+---------------------+
+| event                          | item                      | category        | contributor     | distribution_status | received_at         | distributed_at      |
++--------------------------------+---------------------------+-----------------+-----------------+---------------------+---------------------+---------------------+
+| Fall Move-Out Collection Drive | Box of Notebooks and Pens | School Supplies | Elijah Moore    | Accepted            | 2026-10-22 11:30:00 | NULL                |
+| Fall Move-Out Collection Drive | Twin XL Bedding Set       | Dorm Essentials | Jordan Davis    | Available           | 2026-10-23 15:30:00 | NULL                |
+| Fall Move-Out Collection Drive | Desk Organizer            | School Supplies | Imani Scott     | Distributed         | 2026-10-24 10:00:00 | 2026-10-29 14:00:00 |
+| Fall Move-Out Collection Drive | TI-83 Plus Calculator     | Electronics     | Christopher Lee | Pending             | NULL                | NULL                |
++--------------------------------+---------------------------+-----------------+-----------------+---------------------+---------------------+---------------------+
+--------------
+SELECT e.title AS event, e.event_type, GROUP_CONCAT(c.name ORDER BY c.name SEPARATOR ', ') AS accepted_item_types
+FROM collection_event e
+JOIN event_category ec ON ec.event_id = e.event_id
+JOIN category c        ON c.category_id = ec.category_id
+GROUP BY e.event_id, e.title, e.event_type
+--------------
+
++--------------------------------+------------------+----------------------------------------------------------+
+| event                          | event_type       | accepted_item_types                                      |
++--------------------------------+------------------+----------------------------------------------------------+
+| Fall Move-Out Collection Drive | Collection Drive | Dorm Essentials, Electronics, Furniture, School Supplies |
+| Electronics Giveaway Day       | Giveaway         | Electronics                                              |
++--------------------------------+------------------+----------------------------------------------------------+
+--------------
+SELECT mc.case_id, mc.status AS case_status, rp.reason,
+       CONCAT(rep.first_name, ' ', rep.last_name) AS reported_by,
+       COALESCE(CONCAT('Item: ', i.title),
+                CONCAT('Event: ', e.title),
+                CONCAT('Organization: ', o.name),
+                CONCAT('User: ', tu.first_name, ' ', tu.last_name)) AS reported_target,
+       CONCAT(mod_u.first_name, ' ', mod_u.last_name) AS moderator,
+       GROUP_CONCAT(ma.action_type ORDER BY ma.created_at SEPARATOR ', ') AS actions
+FROM moderation_case mc
+JOIN report rp                ON rp.report_id = mc.report_id
+JOIN user rep                 ON rep.user_id = rp.reporter_user_id
+LEFT JOIN user tu             ON tu.user_id = rp.reported_user_id
+LEFT JOIN organization o      ON o.organization_id = rp.reported_organization_id
+LEFT JOIN item i              ON i.item_id = rp.item_id
+LEFT JOIN collection_event e  ON e.event_id = rp.event_id
+LEFT JOIN user mod_u          ON mod_u.user_id = mc.assigned_to_user_id
+LEFT JOIN moderation_action ma ON ma.case_id = mc.case_id
+GROUP BY mc.case_id, mc.status, rp.reason, reported_by, reported_target, moderator
+--------------
+
++---------+-------------+------------------------+-----------------+-----------------------------------------------+-----------------+--------------------------+
+| case_id | case_status | reason                 | reported_by     | reported_target                               | moderator       | actions                  |
++---------+-------------+------------------------+-----------------+-----------------------------------------------+-----------------+--------------------------+
+|       1 | Closed      | Inaccurate Description | Imani Scott     | Item: Introduction to Psychology, 7th Edition | Marcus Johnson  | Listing Removed, Warning |
+|       2 | Escalated   | Suspicious Activity    | Christopher Lee | User: Tyrell Jackson                          | Keisha Williams | Reservation Restriction  |
++---------+-------------+------------------------+-----------------+-----------------------------------------------+-----------------+--------------------------+
+--------------
+SELECT CONCAT(s.first_name, ' ', s.last_name) AS from_user, i.title AS about_item, m.body, m.sent_at
+FROM message m
+JOIN user s                ON s.user_id = m.sender_user_id
+LEFT JOIN reservation r    ON r.reservation_id = m.reservation_id
+LEFT JOIN item i           ON i.item_id = r.item_id
+WHERE m.recipient_user_id = (SELECT user_id FROM user WHERE email = 'jordan2.davis@famu.edu')
+  AND m.is_read = FALSE
+--------------
+
++--------------+--------------------------------+-----------------------------------------------------+---------------------+
+| from_user    | about_item                     | body                                                | sent_at             |
++--------------+--------------------------------+-----------------------------------------------------+---------------------+
+| Elijah Moore | TI-84 Plus Graphing Calculator | Noon works. I will be at the Coleman Library lobby. | 2026-11-05 00:33:23 |
++--------------+--------------------------------+-----------------------------------------------------+---------------------+
+--------------
+SELECT r.role_name, COUNT(*) AS permissions,
+       GROUP_CONCAT(p.permission_code ORDER BY p.permission_code SEPARATOR ', ') AS codes
+FROM role r
+JOIN role_permission rp ON rp.role_id = r.role_id
+JOIN permission p       ON p.permission_id = rp.permission_id
+GROUP BY r.role_id, r.role_name
+ORDER BY r.role_id
+--------------
+
++-------------------------------------+-------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| role_name                           | permissions | codes                                                                                                                                                                                                                                                          |
++-------------------------------------+-------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Campus User                         |           5 | exchange.confirm, item.create, item.edit_own, item.reserve, report.create                                                                                                                                                                                      |
+| Department Representative           |           8 | exchange.confirm, item.create, item.edit_own, item.reserve, org.manage_listings, org.manage_profile, report.create, reports.generate                                                                                                                           |
+| Student Organization Representative |           9 | event.manage, exchange.confirm, item.create, item.edit_own, item.reserve, org.manage_listings, org.manage_profile, report.create, reports.generate                                                                                                             |
+| Community Moderator                 |           3 | moderation.restrict, moderation.review, report.create                                                                                                                                                                                                          |
+| Administrator                       |          14 | admin.manage_categories, admin.manage_settings, admin.manage_users, event.manage, exchange.confirm, item.create, item.edit_own, item.reserve, moderation.restrict, moderation.review, org.manage_listings, org.manage_profile, report.create, reports.generate |
++-------------------------------------+-------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+--------------
+INSERT INTO item (posted_by_user_id, category_id, title, description, item_condition, pickup_location, estimated_value)
+VALUES ((SELECT user_id FROM user WHERE email = 'imani.scott@famu.edu'),
+        (SELECT category_id FROM category WHERE name = 'Furniture'),
+        'Folding Desk Chair', 'Padded folding chair, perfect for a dorm desk.', 'Good',
+        'Student Union food court', 15.00)
+--------------
+
+--------------
+SET @new_item_id = LAST_INSERT_ID()
+--------------
+
+--------------
+INSERT INTO item_image (item_id, image_url, display_order)
+VALUES (@new_item_id, CONCAT('https://res.cloudinary.com/rattler-rrs/image/upload/items/', @new_item_id, '/chair.jpg'), 1)
+--------------
+
+--------------
+SELECT item_id, title, status, created_at FROM item WHERE item_id = @new_item_id
+--------------
+
++---------+--------------------+----------------+---------------------+
+| item_id | title              | status         | created_at          |
++---------+--------------------+----------------+---------------------+
+|      28 | Folding Desk Chair | Pending Review | 2026-11-05 03:33:23 |
++---------+--------------------+----------------+---------------------+
+--------------
+UPDATE item SET status = 'Available' WHERE item_id = @new_item_id
+--------------
+
+--------------
+CALL reserve_item(@new_item_id,
+                  (SELECT user_id FROM user WHERE email = 'christopher.lee@famu.edu'),
+                  NULL, 'Can pick up after 5pm.')
+--------------
+
++----------------+--------+---------------------+---------------------+-----------------+--------------------------+--------------+---------+--------------------+-----------+-------------+-----------------+-------------+
+| reservation_id | status | reserved_at         | expires_at          | reserved_by     | reserved_by_email        | received_for | item_id | item               | category  | given_by    | exchange_status | pickup_time |
++----------------+--------+---------------------+---------------------+-----------------+--------------------------+--------------+---------+--------------------+-----------+-------------+-----------------+-------------+
+|             14 | Active | 2026-11-05 03:33:23 | 2026-11-07 03:33:23 | Christopher Lee | christopher.lee@famu.edu | NULL         |      28 | Folding Desk Chair | Furniture | Imani Scott | NULL            | NULL        |
++----------------+--------+---------------------+---------------------+-----------------+--------------------------+--------------+---------+--------------------+-----------+-------------+-----------------+-------------+
+--------------
+SELECT item_id, title, status FROM item WHERE item_id = @new_item_id
+--------------
+
++---------+--------------------+----------+
+| item_id | title              | status   |
++---------+--------------------+----------+
+|      28 | Folding Desk Chair | Reserved |
++---------+--------------------+----------+
+--------------
+UPDATE item
+   SET description = 'Three brightness levels, adjustable arm, includes USB-C cable.',
+       estimated_value = 18.00
+ WHERE item_id = 5
+--------------
+
+--------------
+SELECT item_id, title, description, estimated_value FROM item WHERE item_id = 5
+--------------
+
++---------+-----------------------------+----------------------------------------------------------------+-----------------+
+| item_id | title                       | description                                                    | estimated_value |
++---------+-----------------------------+----------------------------------------------------------------+-----------------+
+|       5 | LED Desk Lamp with USB Port | Three brightness levels, adjustable arm, includes USB-C cable. |           18.00 |
++---------+-----------------------------+----------------------------------------------------------------+-----------------+
+--------------
+SELECT x.exchange_id, x.status AS exchange_before, r.status AS reservation_before, i.status AS item_before
+FROM exchange x JOIN reservation r ON r.reservation_id = x.reservation_id JOIN item i ON i.item_id = r.item_id
+WHERE x.exchange_id = 5
+--------------
+
++-------------+-----------------+--------------------+-------------+
+| exchange_id | exchange_before | reservation_before | item_before |
++-------------+-----------------+--------------------+-------------+
+|           5 | Scheduled       | Active             | Reserved    |
++-------------+-----------------+--------------------+-------------+
+--------------
+UPDATE exchange SET receiver_confirmed_at = NOW() WHERE exchange_id = 5
+--------------
+
+--------------
+SELECT x.exchange_id, x.status AS exchange_after, x.completed_at, r.status AS reservation_after, i.status AS item_after
+FROM exchange x JOIN reservation r ON r.reservation_id = x.reservation_id JOIN item i ON i.item_id = r.item_id
+WHERE x.exchange_id = 5
+--------------
+
++-------------+----------------+---------------------+-------------------+------------+
+| exchange_id | exchange_after | completed_at        | reservation_after | item_after |
++-------------+----------------+---------------------+-------------------+------------+
+|           5 | Completed      | 2026-11-05 03:33:23 | Completed         | Completed  |
++-------------+----------------+---------------------+-------------------+------------+
+--------------
+UPDATE reservation SET status = 'Cancelled' WHERE reservation_id = 9
+--------------
+
+--------------
+SELECT r.reservation_id, r.status, i.title, i.status AS item_status
+FROM reservation r JOIN item i ON i.item_id = r.item_id WHERE r.reservation_id = 9
+--------------
+
++----------------+-----------+--------------------------------+-------------+
+| reservation_id | status    | title                          | item_status |
++----------------+-----------+--------------------------------+-------------+
+|              9 | Cancelled | Organic Chemistry, 9th Edition | Available   |
++----------------+-----------+--------------------------------+-------------+
+--------------
+UPDATE system_setting SET setting_value = '72', updated_by_user_id = 1
+ WHERE setting_key = 'reservation_expiration_hours'
+--------------
+
+--------------
+SELECT * FROM system_setting WHERE setting_key = 'reservation_expiration_hours'
+--------------
+
++------------------------------+---------------+--------------------+---------------------+
+| setting_key                  | setting_value | updated_by_user_id | updated_at          |
++------------------------------+---------------+--------------------+---------------------+
+| reservation_expiration_hours | 72            |                  1 | 2026-11-05 03:33:23 |
++------------------------------+---------------+--------------------+---------------------+
+--------------
+SET @actor_user_id = 1
+--------------
+
+--------------
+SET @justification = 'Student conduct review completed; reservation restriction remains until 2026-11-13.'
+--------------
+
+--------------
+UPDATE user SET account_status = 'Active' WHERE email = 'tyrell.jackson@famu.edu'
+--------------
+
+--------------
+SET @actor_user_id = NULL
+--------------
+
+--------------
+SET @justification = NULL
+--------------
+
+--------------
+SELECT a.log_id, CONCAT(ad.first_name, ' ', ad.last_name) AS administrator,
+       CONCAT(t.first_name, ' ', t.last_name) AS account, a.action, a.justification, a.created_at
+FROM audit_log a
+JOIN user ad ON ad.user_id = a.actor_user_id
+JOIN user t  ON t.user_id = a.target_user_id
+ORDER BY a.log_id
+--------------
+
++--------+---------------+----------------+-------------------------------------+---------------------------------------------------------------------------------------------------+---------------------+
+| log_id | administrator | account        | action                              | justification                                                                                     | created_at          |
++--------+---------------+----------------+-------------------------------------+---------------------------------------------------------------------------------------------------+---------------------+
+|      1 | Angela Brooks | Tyrell Jackson | account_status: Active -> Suspended | Escalated case #2: three confirmed no-shows in October. Suspended pending student conduct review. | 2026-11-05 03:33:23 |
+|      2 | Angela Brooks | Tyrell Jackson | account_status: Suspended -> Active | Student conduct review completed; reservation restriction remains until 2026-11-13.               | 2026-11-05 03:33:23 |
++--------+---------------+----------------+-------------------------------------+---------------------------------------------------------------------------------------------------+---------------------+
+--------------
+SELECT o.name AS organization, o.organization_type,
+       (SELECT COUNT(*) FROM item i WHERE i.owner_organization_id = o.organization_id) AS listings,
+       (SELECT COUNT(*) FROM item i WHERE i.owner_organization_id = o.organization_id AND i.status = 'Available') AS active_listings,
+       (SELECT COUNT(*) FROM item i WHERE i.owner_organization_id = o.organization_id AND i.status = 'Completed') AS items_given,
+       (SELECT COUNT(*) FROM reservation r WHERE r.receiver_organization_id = o.organization_id AND r.status = 'Completed') AS items_received,
+       (SELECT COALESCE(SUM(i.estimated_value), 0) FROM reservation r JOIN item i ON i.item_id = r.item_id
+         WHERE r.receiver_organization_id = o.organization_id AND r.status = 'Completed') AS value_received
+FROM organization o
+WHERE o.status = 'Approved'
+ORDER BY o.organization_type, o.name
+--------------
+
++-----------------------------------------------+----------------------+----------+-----------------+-------------+----------------+----------------+
+| organization                                  | organization_type    | listings | active_listings | items_given | items_received | value_received |
++-----------------------------------------------+----------------------+----------+-----------------+-------------+----------------+----------------+
+| Coleman Library                               | Department           |        2 |               1 |           1 |              0 |           0.00 |
+| Department of Biology                         | Department           |        3 |               2 |           0 |              0 |           0.00 |
+| Department of Computer & Information Sciences | Department           |        3 |               1 |           1 |              0 |           0.00 |
+| FAMU Environmental Club                       | Student Organization |        5 |               3 |           1 |              1 |         225.00 |
+| Rattler Robotics Club                         | Student Organization |        1 |               0 |           0 |              1 |         600.00 |
++-----------------------------------------------+----------------------+----------+-----------------+-------------+----------------+----------------+
+--------------
+SELECT c.name AS category, COUNT(*) AS items_reused, SUM(i.estimated_value) AS estimated_money_saved
+FROM reservation r
+JOIN item i     ON i.item_id = r.item_id
+JOIN category c ON c.category_id = i.category_id
+WHERE r.status = 'Completed'
+GROUP BY c.name WITH ROLLUP
+--------------
+
++-----------------+--------------+-----------------------+
+| category        | items_reused | estimated_money_saved |
++-----------------+--------------+-----------------------+
+| Dorm Essentials |            1 |                 90.00 |
+| Electronics     |            1 |                600.00 |
+| Furniture       |            1 |                225.00 |
+| Textbooks       |            1 |                 45.00 |
+| NULL            |            4 |                960.00 |
++-----------------+--------------+-----------------------+
+--------------
+SET @uid = (SELECT user_id FROM user WHERE email = 'jordan2.davis@famu.edu')
+--------------
+
+--------------
+SELECT 'Given' AS activity, i.title, r.status, r.reserved_at AS activity_date
+FROM item i JOIN reservation r ON r.item_id = i.item_id
+WHERE i.posted_by_user_id = @uid AND r.status = 'Completed'
+UNION ALL
+SELECT 'Reserved', i.title, r.status, r.reserved_at
+FROM reservation r JOIN item i ON i.item_id = r.item_id
+WHERE r.reserved_by_user_id = @uid
+UNION ALL
+SELECT 'Contributed to drive', i.title, ei.distribution_status, ei.received_at
+FROM event_item ei JOIN item i ON i.item_id = ei.item_id
+WHERE ei.contributor_user_id = @uid
+ORDER BY activity_date
+--------------
+
++----------------------+----------------------------------------------+-----------+---------------------+
+| activity             | title                                        | status    | activity_date       |
++----------------------+----------------------------------------------+-----------+---------------------+
+| Given                | Calculus: Early Transcendentals, 8th Edition | Completed | 2026-10-05 10:00:00 |
+| Reserved             | Black Winter Coat (Men's M)                  | Expired   | 2026-10-18 11:00:00 |
+| Contributed to drive | Twin XL Bedding Set                          | Available | 2026-10-23 15:30:00 |
+| Reserved             | TI-84 Plus Graphing Calculator               | Active    | 2026-11-04 22:33:23 |
++----------------------+----------------------------------------------+-----------+---------------------+

@@ -1,0 +1,49 @@
+---
+title: Rattler Resource Rescue System — Collection Drives & Giveaways
+---
+erDiagram
+    COLLECTION_EVENT {
+        INT event_id PK
+        INT organization_id FK
+        INT created_by_user_id FK
+        VARCHAR(30) event_type
+        VARCHAR(150) title
+        TEXT description "optional"
+        TEXT participation_instructions "optional"
+        VARCHAR(200) location
+        DATETIME start_at
+        DATETIME end_at
+        VARCHAR(30) status
+    }
+    EVENT_CATEGORY {
+        INT event_id PK,FK
+        INT category_id PK,FK
+    }
+    EVENT_ITEM {
+        INT event_item_id PK
+        INT event_id FK
+        INT item_id FK,UK
+        INT contributor_user_id FK
+        VARCHAR(30) distribution_status
+        DATETIME received_at "optional"
+        DATETIME distributed_at "optional"
+    }
+    ORGANIZATION {
+        INT organization_id PK
+    }
+    USER {
+        INT user_id PK
+    }
+    CATEGORY {
+        INT category_id PK
+    }
+    ITEM {
+        INT item_id PK
+    }
+    USER ||--o{ COLLECTION_EVENT : "created_by_user_id"
+    ORGANIZATION ||--o{ COLLECTION_EVENT : "organization_id"
+    CATEGORY ||--o{ EVENT_CATEGORY : "category_id"
+    COLLECTION_EVENT ||--o{ EVENT_CATEGORY : "event_id"
+    USER ||--o{ EVENT_ITEM : "contributor_user_id"
+    COLLECTION_EVENT ||--o{ EVENT_ITEM : "event_id"
+    ITEM ||--o| EVENT_ITEM : "item_id"

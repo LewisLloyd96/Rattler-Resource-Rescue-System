@@ -1,0 +1,64 @@
+---
+title: Rattler Resource Rescue System — Reports & Moderation
+---
+erDiagram
+    REPORT {
+        INT report_id PK
+        INT reporter_user_id FK
+        INT reported_user_id FK "optional"
+        INT reported_organization_id FK "optional"
+        INT item_id FK "optional"
+        INT exchange_id FK "optional"
+        INT event_id FK "optional"
+        VARCHAR(100) reason
+        TEXT details "optional"
+        VARCHAR(30) status
+        DATETIME created_at
+    }
+    MODERATION_CASE {
+        INT case_id PK
+        INT report_id FK,UK
+        INT assigned_to_user_id FK "optional"
+        INT escalated_to_user_id FK "optional"
+        DATETIME escalated_at "optional"
+        VARCHAR(30) status
+        TEXT findings "optional"
+        TEXT resolution "optional"
+        DATETIME closed_at "optional"
+    }
+    MODERATION_ACTION {
+        INT action_id PK
+        INT case_id FK
+        INT performed_by_user_id FK
+        VARCHAR(40) action_type
+        VARCHAR(255) reason "NEW"
+        DATETIME restriction_ends_at "optional"
+        TEXT notes "optional"
+        DATETIME created_at
+    }
+    USER {
+        INT user_id PK
+    }
+    ORGANIZATION {
+        INT organization_id PK
+    }
+    ITEM {
+        INT item_id PK
+    }
+    EXCHANGE {
+        INT exchange_id PK
+    }
+    COLLECTION_EVENT {
+        INT event_id PK
+    }
+    MODERATION_CASE ||--o{ MODERATION_ACTION : "case_id"
+    USER ||--o{ MODERATION_ACTION : "performed_by_user_id"
+    USER |o--o{ MODERATION_CASE : "assigned_to_user_id"
+    USER |o--o{ MODERATION_CASE : "escalated_to_user_id"
+    REPORT ||--o| MODERATION_CASE : "report_id"
+    COLLECTION_EVENT |o--o{ REPORT : "event_id"
+    EXCHANGE |o--o{ REPORT : "exchange_id"
+    ITEM |o--o{ REPORT : "item_id"
+    ORGANIZATION |o--o{ REPORT : "reported_organization_id"
+    USER ||--o{ REPORT : "reporter_user_id"
+    USER |o--o{ REPORT : "reported_user_id"
