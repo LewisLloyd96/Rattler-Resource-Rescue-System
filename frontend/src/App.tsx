@@ -1,3 +1,4 @@
+
 // Home screen based on the Figma wireframe. This is a technical proof that the
 // React + TypeScript + Tailwind toolchain builds and runs; every link and button
 // is a placeholder and nothing is wired to the backend yet.
