@@ -1,0 +1,43 @@
+API health: 200 {'status': 'ok', 'database': 'connected'}
+
+1. Successful sign-in for each role
+  PASS  Administrator                        angela.brooks@famu.edu  (HTTP 200, role from database: Administrator)
+  PASS  Campus User                          jordan2.davis@famu.edu  (HTTP 200, role from database: Campus User)
+  PASS  Department Representative            robert.hayes@famu.edu  (HTTP 200, role from database: Department Representative)
+  PASS  Student Organization Representative  jasmine1.carter@famu.edu  (HTTP 200, role from database: Student Organization Representative)
+  PASS  Community Moderator                  marcus.johnson@famu.edu  (HTTP 200, role from database: Community Moderator)
+
+2. Invalid sign-in is rejected
+  PASS  Wrong password  (HTTP 401: Email or password is incorrect.)
+  PASS  Unknown email  (HTTP 401: Email or password is incorrect.)
+
+3. Assigned retrieval use case returns database records
+  PASS  Administrator                        GET /api/users/  (lists all 16 user accounts across all five roles)
+  PASS  Campus User                          GET /api/items/  (returns only Available items)
+  PASS  Department Representative            GET /api/department/  (returns the CIS department's items and reservations)
+  PASS  Student Organization Representative  GET /api/organization/  (returns the Environmental Club's listings, reservations and drives)
+  PASS  Community Moderator                  GET /api/reports/  (returns reported listings and exchange problems)
+
+4. Role-based authorization
+  PASS  No token: GET /api/users/  (HTTP 401)
+  PASS  Administrator                        blocked from /api/items/  (HTTP 403)
+  PASS  Administrator                        blocked from /api/department/  (HTTP 403)
+  PASS  Administrator                        blocked from /api/organization/  (HTTP 403)
+  PASS  Campus User                          blocked from /api/users/  (HTTP 403)
+  PASS  Campus User                          blocked from /api/department/  (HTTP 403)
+  PASS  Campus User                          blocked from /api/organization/  (HTTP 403)
+  PASS  Campus User                          blocked from /api/reports/  (HTTP 403)
+  PASS  Department Representative            blocked from /api/users/  (HTTP 403)
+  PASS  Department Representative            blocked from /api/items/  (HTTP 403)
+  PASS  Department Representative            blocked from /api/organization/  (HTTP 403)
+  PASS  Department Representative            blocked from /api/reports/  (HTTP 403)
+  PASS  Student Organization Representative  blocked from /api/users/  (HTTP 403)
+  PASS  Student Organization Representative  blocked from /api/items/  (HTTP 403)
+  PASS  Student Organization Representative  blocked from /api/department/  (HTTP 403)
+  PASS  Student Organization Representative  blocked from /api/reports/  (HTTP 403)
+  PASS  Community Moderator                  blocked from /api/users/  (HTTP 403)
+  PASS  Community Moderator                  blocked from /api/items/  (HTTP 403)
+  PASS  Community Moderator                  blocked from /api/department/  (HTTP 403)
+  PASS  Community Moderator                  blocked from /api/organization/  (HTTP 403)
+
+32 of 32 checks passed
