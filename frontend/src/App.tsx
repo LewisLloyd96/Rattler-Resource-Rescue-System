@@ -101,7 +101,7 @@ const TOKEN_KEY = 'rrrs_api_token'
 const roleNavigation: Record<Role, NavigationItem[]> = {
   Administrator: [
     { label: 'Overview', screen: 'overview', icon: LayoutDashboard },
-    { label: 'Manage users', screen: 'users', icon: Users },
+    { label: 'Manage the users', screen: 'users', icon: Users },
     { label: 'Manage categories', screen: 'categories', icon: Tag },
     { label: 'Review reports', screen: 'reports-queue', icon: Flag },
     { label: 'Activity reports', screen: 'activity', icon: ClipboardList },

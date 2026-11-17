@@ -5,7 +5,7 @@ import type { Account, DepartmentWorkspace, Listing, OrganizationWorkspace, Repo
 
 const demoPassword = 'Rattler2026!'
 const roles: { role: Role; email: string; firstName: string; lastName: string; feature: string }[] = [
-  { role: 'Administrator', email: 'angela.brooks@famu.edu', firstName: 'Angela', lastName: 'Brooks', feature: 'Manage users' },
+  { role: 'Administrator', email: 'angela.brooks@famu.edu', firstName: 'Angela', lastName: 'Brooks', feature: 'Manage the users' },
   { role: 'Campus User', email: 'jordan2.davis@famu.edu', firstName: 'Jordan', lastName: 'Davis', feature: 'Browse items' },
   { role: 'Department Representative', email: 'robert.hayes@famu.edu', firstName: 'Robert', lastName: 'Hayes', feature: 'Department inventory' },
   { role: 'Student Organization Representative', email: 'jasmine1.carter@famu.edu', firstName: 'Jasmine', lastName: 'Carter', feature: 'Organization activity' },
@@ -254,7 +254,7 @@ test('campus users can reserve free items without seeing price points', async ()
 test('administrators search database users', async () => {
   render(<App />)
   const navigation = await signIn('angela.brooks@famu.edu')
-  fireEvent.click(within(navigation).getByRole('button', { name: 'Manage users' }))
+  fireEvent.click(within(navigation).getByRole('button', { name: 'Manage the users' }))
 
   expect(await screen.findByText('Jordan Davis')).toBeInTheDocument()
   fireEvent.change(screen.getByLabelText('Search users'), { target: { value: 'jordan' } })
