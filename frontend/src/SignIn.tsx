@@ -30,7 +30,7 @@ function SignIn({ onBack, onSubmit }: SignInProps) {
 
         <div className="mb-6 text-center">
           <img
-            src="/logo.svg"
+            src="/brand/rrr-mark.jpg"
             alt="Rattler Resource Rescue logo"
             className="mx-auto mb-4 h-16 w-16"
           />

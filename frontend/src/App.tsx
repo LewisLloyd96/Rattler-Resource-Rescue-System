@@ -200,7 +200,7 @@ function StatusBadge({ status }: { status: string }) {
 function SectionTitle({ eyebrow, title, description }: { eyebrow: string; title: string; description: string }) {
   return (
     <div className="mb-6">
-      <p className="text-xs font-bold uppercase tracking-[0.16em] text-emerald-800">{eyebrow}</p>
+      <p className="text-xs font-bold uppercase tracking-[0.16em] text-rattler-orange-dark">{eyebrow}</p>
       <h2 className="mt-2 text-2xl font-bold tracking-tight text-slate-950">{title}</h2>
       <p className="mt-1 text-sm text-slate-500">{description}</p>
     </div>
@@ -308,13 +308,14 @@ function SignIn({ onSignIn, notice }: { onSignIn: (token: string, account: Accou
     <div className="min-h-screen bg-[#f7f8f5] text-slate-900">
       <header className="mx-auto flex max-w-7xl items-center justify-between px-5 py-5 sm:px-8">
         <div className="flex items-center gap-3">
-          <img src="/logo.svg" alt="" className="h-10 w-9" />
+          <img src="/brand/rrr-mark.jpg" alt="Rattler Resource Rescue logo" className="h-11 w-11 rounded-xl object-cover shadow-sm ring-1 ring-black/10" />
           <span className="font-bold tracking-tight">Rattler Resource Rescue</span>
         </div>
-        <span className="rounded-full bg-emerald-100 px-3 py-1.5 text-xs font-semibold text-emerald-900">FAMU campus exchange</span>
+        <span className="rounded-full bg-rattler-orange/10 px-3 py-1.5 text-xs font-semibold text-rattler-orange-dark ring-1 ring-rattler-orange/25">FAMU campus exchange</span>
       </header>
       <main className="mx-auto grid min-h-[calc(100vh-80px)] max-w-7xl items-center gap-12 px-5 py-8 lg:grid-cols-[1.05fr_.95fr] lg:px-8">
         <section className="max-w-xl">
+          <img src="/brand/rrr-banner.jpg" alt="Rattler Resource Rescue logo: orange R R R letters wrapped by a green rattlesnake" className="mb-8 aspect-[1408/768] w-full rounded-3xl object-cover shadow-xl shadow-emerald-950/15 ring-1 ring-black/10" />
           <p className="inline-flex items-center gap-2 rounded-full bg-emerald-100 px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-emerald-900"><Sparkles size={14} aria-hidden /> Reuse resources. Support each other.</p>
           <h1 className="mt-6 text-4xl font-bold leading-tight tracking-tight text-slate-950 sm:text-6xl">Good things deserve a second life.</h1>
           <p className="mt-5 max-w-lg text-lg leading-8 text-slate-600">Find what you need. Share what you don’t. Keep campus resources in use.</p>
@@ -685,7 +686,7 @@ function App() {
       <>
         <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#074b3b] via-emerald-900 to-[#123c35] p-7 text-white shadow-lg sm:p-10">
           <div className="relative z-10 max-w-2xl">
-            <p className="text-xs font-bold uppercase tracking-[0.18em] text-emerald-200">{role} workspace</p>
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-rattler-orange-light">{role} workspace</p>
             <h2 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">{headline.title}</h2>
             <p className="mt-3 max-w-xl text-sm leading-6 text-emerald-50/80 sm:text-base">{headline.description}</p>
             <button onClick={() => openScreen(headline.screen)} className="mt-6 inline-flex items-center gap-2 rounded-xl bg-white px-4 py-3 text-sm font-semibold text-emerald-950 transition hover:bg-emerald-50">
@@ -694,14 +695,14 @@ function App() {
           </div>
           <div aria-hidden className="absolute -right-8 -top-14 hidden h-72 w-72 rounded-full border border-white/10 sm:block" />
           <div aria-hidden className="absolute -right-1 -top-6 hidden h-56 w-56 rounded-full border border-white/10 sm:block" />
-          <Leaf aria-hidden className="absolute bottom-7 right-12 hidden h-24 w-24 text-white/10 sm:block" />
+          <img src="/brand/rrr-mark.jpg" alt="" aria-hidden className="absolute bottom-8 right-10 hidden h-36 w-36 rotate-3 rounded-3xl object-cover opacity-90 shadow-2xl ring-1 ring-white/15 lg:block" />
         </section>
         <section className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {metrics.map((metric) => <Metric key={metric.label} {...metric} value={metricValue(metric.value)} />)}
         </section>
         <section className="mt-9">
           <div className="mb-4">
-            <p className="text-xs font-bold uppercase tracking-[0.15em] text-emerald-800">Your workspace</p>
+            <p className="text-xs font-bold uppercase tracking-[0.15em] text-rattler-orange-dark">Your workspace</p>
             <h3 className="mt-1 text-xl font-bold text-slate-950">Quick access</h3>
           </div>
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
@@ -1402,7 +1403,7 @@ function App() {
     <div className="min-h-screen bg-[#f7f8f5] text-slate-800 md:flex">
       <aside className="flex flex-col bg-gradient-to-b from-emerald-950 to-[#063d32] p-4 text-white md:sticky md:top-0 md:h-screen md:w-64 md:shrink-0">
         <div className="mb-7 flex items-center gap-3 px-2">
-          <img src="/logo.svg" alt="" className="h-10 w-9" />
+          <img src="/brand/rrr-mark.jpg" alt="Rattler Resource Rescue logo" className="h-11 w-11 rounded-xl object-cover ring-1 ring-white/20" />
           <span className="text-sm font-bold leading-tight">Rattler Resource<br />Rescue</span>
         </div>
         <p className="mb-2 px-3 text-[10px] font-bold uppercase tracking-[0.18em] text-emerald-200/70">Workspace</p>
@@ -1412,7 +1413,7 @@ function App() {
               key={label}
               onClick={() => openScreen(targetScreen, label)}
               aria-current={activeNavigationLabel === label ? 'page' : undefined}
-              className={`flex shrink-0 items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm transition md:w-full ${activeNavigationLabel === label ? 'bg-white/15 font-semibold text-white ring-1 ring-white/15' : 'text-emerald-50/80 hover:bg-white/10 hover:text-white'}`}
+              className={`flex shrink-0 items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm transition md:w-full ${activeNavigationLabel === label ? 'bg-white/15 font-semibold text-white ring-1 ring-white/15 shadow-[inset_3px_0_0_#F28C28]' : 'text-emerald-50/80 hover:bg-white/10 hover:text-white'}`}
             >
               <Icon size={17} aria-hidden /><span>{label}</span>
             </button>
@@ -1430,7 +1431,7 @@ function App() {
       <div className="min-w-0 flex-1">
         <header className="sticky top-0 z-10 flex items-center justify-between gap-4 border-b border-stone-200 bg-white/95 px-5 py-3.5 backdrop-blur sm:px-8">
           <div>
-            <p className="text-xs text-slate-400">Campus Resource Rescue <span className="px-1">/</span><span className="font-medium text-slate-600">{pageTitle}</span></p>
+            <p className="text-xs text-slate-400">Rattler Resource Rescue <span className="px-1">/</span><span className="font-medium text-slate-600">{pageTitle}</span></p>
             <h1 className="mt-0.5 text-lg font-bold text-slate-900">{pageTitle}</h1>
           </div>
           <div className="flex items-center gap-3">
@@ -1482,7 +1483,7 @@ function App() {
             <button onClick={() => setRefreshVersion((value) => value + 1)} disabled={dataLoading} className="rounded-lg border border-stone-200 bg-white px-3 py-2 text-xs font-medium text-slate-600 hover:bg-stone-50 disabled:opacity-50">Refresh database data</button>
           </div>
         </main>
-        <footer className="px-5 pb-6 text-center text-xs text-slate-400 sm:px-8">Campus Resource Rescue · Sprint III database-backed workflows</footer>
+        <footer className="px-5 pb-6 text-center text-xs text-slate-400 sm:px-8">Rattler Resource Rescue System · FAMU campus exchange</footer>
       </div>
     </div>
   )
