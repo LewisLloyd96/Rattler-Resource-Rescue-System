@@ -6,6 +6,9 @@ Department Representative: robert.hayes@famu.edu
 Student Organization Representative: jasmine1.carter@famu.edu
 Community Moderator: marcus.johnson@famu.edu
 
+Docker Password:
+ba563db46e29413bbbd576ddb5e751d8c6eb6cab6caf4be8b191d737
+
 COMMANDS
 cd backend
 .\.venv\Scripts\Activate.ps1
