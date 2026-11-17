@@ -64,27 +64,22 @@ Install the backend dependencies:
 pip install -r requirements.txt
 ```
 
-### 3. Create the MySQL Database
+### 3. Create or update the Sprint III MySQL Database
 
-Sign in to MySQL:
+The Sprint Cycle III schema script creates the `rattler_resource_rescue` database and drops/recreates it if it already exists. Run it only when you intend to reset the entire database. If the schema and sample data are already installed, do not rerun these first two scripts.
 
 ```bash
-mysql -u root -p
+mysql -u root -p < "Sprint Cycles/Sprint Cycle 3/Database/01_schema.sql"
+mysql -u root -p < "Sprint Cycles/Sprint Cycle 3/Database/02_sample_data.sql"
 ```
 
-Create the development database:
+Set the sample users’ development password. This command can also be run against an already loaded Sprint III database:
 
-```sql
-CREATE DATABASE campus_resource_rescue
-CHARACTER SET utf8mb4
-COLLATE utf8mb4_unicode_ci;
+```bash
+mysql -u root -p < "Sprint Cycles/Sprint Cycle 3/Database/05_demo_passwords.sql"
 ```
 
-Exit MySQL:
-
-```sql
-EXIT;
-```
+The fictional sample accounts use `Rattler2026!`. Do not use this password for real accounts.
 
 ### 4. Configure Environment Variables
 
@@ -95,7 +90,7 @@ DJANGO_SECRET_KEY=replace-with-a-local-secret-key
 DJANGO_DEBUG=True
 DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1
 
-DB_NAME=campus_resource_rescue
+DB_NAME=rattler_resource_rescue
 DB_USER=root
 DB_PASSWORD=replace-with-your-mysql-password
 DB_HOST=localhost
@@ -114,24 +109,12 @@ Cloudinary and Duo values may remain empty until those services are configured.
 
 Do not commit the `.env` file or any passwords, database credentials, API keys, or Duo secrets to GitHub.
 
-### 5. Prepare the Django Application
+### 5. Start the Django API
 
-Apply the database migrations:
-
-```bash
-python manage.py migrate
-```
-
-Optional: Create an administrator account:
+The API reads the existing Sprint III tables directly; it does not create or migrate a second application schema.
 
 ```bash
-python manage.py createsuperuser
-```
-
-Start the Django development server:
-
-```bash
-python manage.py runserver
+python manage.py runserver 127.0.0.1:8000
 ```
 
 The backend should be available at:
@@ -154,7 +137,7 @@ Install the frontend dependencies:
 npm install
 ```
 
-Create a `.env` file inside the `frontend` folder:
+Vite forwards `/api` requests to the local backend by default. To use a different backend, create a `.env` file inside the `frontend` folder:
 
 ```env
 VITE_API_BASE_URL=http://127.0.0.1:8000/api

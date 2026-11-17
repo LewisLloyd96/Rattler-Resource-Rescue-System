@@ -1,0 +1,57 @@
+from django.urls import path
+
+from api.views import (
+    CurrentAccountView,
+    DepartmentWorkspaceView,
+    HealthView,
+    ItemBrowseView,
+    ItemReservationView,
+    LoginView,
+    OrganizationWorkspaceView,
+    ReportQueueView,
+    UserDirectoryView,
+)
+from api.workflows import (
+    ActivityReportsView,
+    CancelReservationView,
+    CampusListingCreateView,
+    CategoriesView,
+    CategoryDetailView,
+    MessagesView,
+    ModerationActionsView,
+    MyListingsView,
+    MyReservationsView,
+    OrganizationProfileView,
+    PendingListingsView,
+    ReportStatusView,
+    SystemSettingsView,
+)
+
+
+urlpatterns = [
+    path('health/', HealthView.as_view(), name='health'),
+    path('auth/login/', LoginView.as_view(), name='login'),
+    path('auth/me/', CurrentAccountView.as_view(), name='current-account'),
+    path('users/', UserDirectoryView.as_view(), name='users'),
+    path('items/', ItemBrowseView.as_view(), name='items'),
+    path('items/create/', CampusListingCreateView.as_view(), name='item-create'),
+    path('items/<int:item_id>/reserve/', ItemReservationView.as_view(), name='item-reservation'),
+    path('my-items/', MyListingsView.as_view(), name='my-items'),
+    path('my-items/<int:item_id>/', MyListingsView.as_view(), name='my-item-detail'),
+    path('reservations/', MyReservationsView.as_view(), name='my-reservations'),
+    path('reservations/<int:reservation_id>/cancel/', CancelReservationView.as_view(), name='reservation-cancel'),
+    path('messages/', MessagesView.as_view(), name='messages'),
+    path('categories/', CategoriesView.as_view(), name='categories'),
+    path('categories/<int:category_id>/', CategoryDetailView.as_view(), name='category-detail'),
+    path('activity-reports/', ActivityReportsView.as_view(), name='activity-reports'),
+    path('settings/', SystemSettingsView.as_view(), name='system-settings'),
+    path('organization/profile/', OrganizationProfileView.as_view(), name='organization-profile'),
+    path('department/profile/', OrganizationProfileView.as_view(), name='department-profile'),
+    path('moderation/actions/', ModerationActionsView.as_view(), name='moderation-actions'),
+    path('admin/pending-listings/', PendingListingsView.as_view(), name='pending-listings'),
+    path('admin/pending-listings/<int:item_id>/', PendingListingsView.as_view(), name='pending-listing-review'),
+    path('reports/<int:report_id>/', ReportStatusView.as_view(), name='report-status'),
+    path('department/', DepartmentWorkspaceView.as_view(), name='department'),
+    path('organization/', OrganizationWorkspaceView.as_view(), name='organization'),
+    path('reports/', ReportQueueView.as_view(), name='reports'),
+]

@@ -34,9 +34,12 @@ Requires **MySQL 8.0.16 or later** (CHECK constraints are enforced from 8.0.16).
 cd "Sprint Cycles/Sprint Cycle 3/Database"
 mysql -u root -p < 01_schema.sql          # drops and recreates rattler_resource_rescue
 mysql -u root -p < 02_sample_data.sql     # loads the sample data
+mysql -u root -p < 05_demo_passwords.sql  # enables local sample-account sign-in
 mysql -u root -p -t < 04_rule_tests.sql   # optional: should end with "22 of 22 rule tests passed"
 mysql -u root -p -t < 03_queries.sql      # runs every demonstration query
 ```
+
+The sample login password set by `05_demo_passwords.sql` is `Rattler2026!` for the fictional seed accounts only. If the schema and sample data are already loaded, run only `05_demo_passwords.sql`; do not rerun `01_schema.sql` unless you intend to drop and recreate the database. See [the backend README](../../backend/README.md) to connect the React frontend to this database.
 
 `03_queries.sql` adds and changes data, so **reload 01 and 02 before a demo** to start from the original data. `04_rule_tests.sql` rolls back everything it does, so it can run at any time.
 

@@ -1,0 +1,40 @@
+services:
+  mysql:
+    image: mysql:8.4
+    container_name: rattler-resource-rescue-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?Set MYSQL_ROOT_PASSWORD in the repository .env file}
+      MYSQL_DATABASE: rattler_resource_rescue
+      MYSQL_USER: rrrs_app
+      MYSQL_PASSWORD: ${MYSQL_APP_PASSWORD:?Set MYSQL_APP_PASSWORD in the repository .env file}
+    command: ["--event-scheduler=ON"]
+    ports:
+      - "${MYSQL_PORT:-3306}:3306"
+    volumes:
+      - rattler_mysql_data:/var/lib/mysql
+      - type: bind
+        source: ./Sprint Cycles/Sprint Cycle 3/Database/01_schema.sql
+        target: /docker-entrypoint-initdb.d/01_schema.sql
+        read_only: true
+      - type: bind
+        source: ./Sprint Cycles/Sprint Cycle 3/Database/02_sample_data.sql
+        target: /docker-entrypoint-initdb.d/02_sample_data.sql
+        read_only: true
+      - type: bind
+        source: ./Sprint Cycles/Sprint Cycle 3/Database/05_demo_passwords.sql
+        target: /docker-entrypoint-initdb.d/05_demo_passwords.sql
+        read_only: true
+      - type: bind
+        source: ./Sprint Cycles/Sprint Cycle 3/Database/06_app_read_grants.sql
+        target: /docker-entrypoint-initdb.d/06_app_read_grants.sql
+        read_only: true
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping --host=127.0.0.1 --user=root --password=$$MYSQL_ROOT_PASSWORD --silent"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 30s
+
+volumes:
+  rattler_mysql_data:

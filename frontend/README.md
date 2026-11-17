@@ -1,23 +1,32 @@
 # Rattler Resource Rescue System – Frontend
 
-Home screen (based on the Figma wireframe) built with **React + TypeScript + Tailwind CSS** (Vite).
-It is a technical proof that the toolchain works. The navigation links are placeholders.
+The React + TypeScript frontend uses the Django API to sign users in and retrieve Sprint Cycle III database records. It does not contain database credentials or local fallback records.
 
-![Home screen](../docs/home_screen.png)
+Implemented role-based read workflows:
 
-## Run it
+- Administrator: search and filter database users.
+- Campus User: search and filter available listings.
+- Department Representative: view department listings and related reservations.
+- Student Organization Representative: view organization listings, reservations, collection drives, giveaways, and contributed items.
+- Community Moderator: search and filter reported listings and exchange problems.
 
-Requires Node.js 20+.
+## Run the application
 
-```bash
+Requires Node.js 20+ and the backend/MySQL database running. See [the backend setup guide](../backend/README.md).
+
+```powershell
 cd frontend
 npm install
-npm run dev      # open http://localhost:5173/
+npm run dev
 ```
 
-Other scripts:
+Open the Vite URL, normally `http://localhost:5173`. Vite forwards `/api` requests to `http://127.0.0.1:8000`; optionally set `VITE_API_BASE_URL` in a local `.env` file to change the API address.
 
-```bash
-npm run build    # type-check and production build
-npm test         # Vitest + React Testing Library
+The local sample account password is `Rattler2026!` after applying `Sprint Cycles/Sprint Cycle 3/Database/05_demo_passwords.sql`. The role is read from the database, not chosen in the frontend.
+
+## Validation
+
+```powershell
+npm test
+npm run build
 ```
