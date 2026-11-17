@@ -1,0 +1,15 @@
+Local demo accounts all use the password Rattler2026! (after applying the demo-password seed script):
+
+Administrator: angela.brooks@famu.edu
+Campus User: jordan2.davis@famu.edu
+Department Representative: robert.hayes@famu.edu
+Student Organization Representative: jasmine1.carter@famu.edu
+Community Moderator: marcus.johnson@famu.edu
+
+COMMANDS
+cd backend
+.\.venv\Scripts\Activate.ps1
+python manage.py runserver 127.0.0.1:8000
+
+cd frontend
+npm run dev
