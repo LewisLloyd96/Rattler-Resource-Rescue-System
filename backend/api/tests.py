@@ -12,7 +12,7 @@ from api.views import (
     ReportQueueView,
     UserDirectoryView,
 )
-from api.workflows import CampusListingCreateView
+from api.workflows import CampusListingCreateView, UserAccountStatusView
 
 
 class DatabaseApiTests(SimpleTestCase):
@@ -188,3 +188,37 @@ class WorkflowApiTests(SimpleTestCase):
         self.assertEqual(response.status_code, 201)
         self.assertEqual(response.data, {'id': 24, 'status': 'Available'})
         self.assertEqual(cursor.execute.call_args.args[1][-1], 'Available')
+
+    @patch('api.workflows.connection')
+    @patch('api.workflows.query_one')
+    def test_administrator_can_deactivate_user_with_audit_context(self, query_one, connection):
+        query_one.return_value = {'user_id': 16, 'account_status': 'Active'}
+        cursor = connection.cursor.return_value.__enter__.return_value
+        cursor.rowcount = 1
+        request = self.factory.patch(
+            '/api/users/16/status/',
+            {
+                'action': 'deactivate',
+                'justification': 'Repeatedly violated the campus resource policy.',
+            },
+            format='json',
+        )
+        force_authenticate(
+            request,
+            user=AuthenticatedAccount(
+                1,
+                'Angela',
+                'Brooks',
+                'angela.brooks@famu.edu',
+                'Administrator',
+                'Active',
+            ),
+        )
+
+        response = UserAccountStatusView.as_view()(request, user_id=16)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data, {'id': 16, 'status': 'Deactivated'})
+        sql_calls = [call.args[0] for call in cursor.execute.call_args_list]
+        self.assertIn('SET @actor_user_id = %s', sql_calls)
+        self.assertIn('SET @justification = %s', sql_calls)
