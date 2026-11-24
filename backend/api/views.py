@@ -44,6 +44,7 @@ def listing_payload(item):
         'title': item['title'],
         'description': item['description'],
         'category': item['category'],
+        **({'categoryId': item['category_id']} if 'category_id' in item else {}),
         'condition': item['item_condition'],
         'quantity': item['quantity'],
         'location': item['pickup_location'],
@@ -87,7 +88,7 @@ def organization_for_user(user, organization_type):
 def organization_items(organization_id):
     rows = query_all(
         """
-        SELECT i.item_id, i.title, i.description, c.name AS category,
+        SELECT i.item_id, i.title, i.description, i.category_id, c.name AS category,
                i.item_condition, i.quantity, i.pickup_location,
                i.status,
                COALESCE(o.name, CONCAT(u.first_name, ' ', u.last_name)) AS owner_name,
@@ -328,7 +329,7 @@ class OrganizationWorkspaceView(APIView):
         events = query_all(
             """
             SELECT event_id AS id, title, event_type AS type, status, location,
-                   description,
+                   description, participation_instructions,
                    DATE_FORMAT(start_at, '%%b %%e, %%Y') AS starts_at,
                    DATE_FORMAT(end_at, '%%b %%e, %%Y') AS ends_at
             FROM collection_event
@@ -349,6 +350,7 @@ class OrganizationWorkspaceView(APIView):
                 'status': event['status'],
                 'location': event['location'],
                 'description': event['description'],
+                'instructions': event['participation_instructions'],
                 'date': date_range,
             })
         event_ids = [event['id'] for event in events]
@@ -426,7 +428,7 @@ class ReportQueueView(APIView):
                    CONCAT(reporter.first_name, ' ', reporter.last_name) AS reporter,
                    rp.details,
                    DATE_FORMAT(rp.created_at, '%%b %%e, %%Y') AS date,
-                   mc.status AS caseStatus,
+                   mc.status AS caseStatus, mc.resolution AS decision,
                    rp.item_id AS reportedItemId,
                    CASE
                      WHEN i.item_id IS NULL THEN NULL

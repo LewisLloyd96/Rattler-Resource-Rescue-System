@@ -12,7 +12,10 @@ from api.views import (
     UserDirectoryView,
 )
 from api.workflows import (
+    AccountStatusView,
     ActivityReportsView,
+    CollectionEventCreateView,
+    DepartmentListingView,
     CancelReservationView,
     CampusListingCreateView,
     CategoriesView,
@@ -33,6 +36,7 @@ urlpatterns = [
     path('auth/login/', LoginView.as_view(), name='login'),
     path('auth/me/', CurrentAccountView.as_view(), name='current-account'),
     path('users/', UserDirectoryView.as_view(), name='users'),
+    path('users/<int:user_id>/status/', AccountStatusView.as_view(), name='account-status'),
     path('items/', ItemBrowseView.as_view(), name='items'),
     path('items/create/', CampusListingCreateView.as_view(), name='item-create'),
     path('items/<int:item_id>/reserve/', ItemReservationView.as_view(), name='item-reservation'),
@@ -52,6 +56,9 @@ urlpatterns = [
     path('admin/pending-listings/<int:item_id>/', PendingListingsView.as_view(), name='pending-listing-review'),
     path('reports/<int:report_id>/', ReportStatusView.as_view(), name='report-status'),
     path('department/', DepartmentWorkspaceView.as_view(), name='department'),
+    path('department/listings/', DepartmentListingView.as_view(), name='department-listing-create'),
+    path('department/listings/<int:item_id>/', DepartmentListingView.as_view(), name='department-listing-edit'),
+    path('organization/events/', CollectionEventCreateView.as_view(), name='organization-event-create'),
     path('organization/', OrganizationWorkspaceView.as_view(), name='organization'),
     path('reports/', ReportQueueView.as_view(), name='reports'),
 ]

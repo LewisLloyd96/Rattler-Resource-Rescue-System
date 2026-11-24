@@ -51,9 +51,10 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
   const payload = await response.json().catch(() => null) as Record<string, unknown> | null
   if (!response.ok) {
     const detail = payload?.detail
+    const fieldError = Object.entries(payload ?? {}).find(([, value]) => Array.isArray(value) && typeof value[0] === 'string')
     const message = typeof detail === 'string'
       ? detail
-      : `The application API returned an error (${response.status}).`
+      : fieldError ? String((fieldError[1] as string[])[0]) : `The application API returned an error (${response.status}).`
     throw new ApiError(message, response.status)
   }
   if (payload === null) throw new ApiError('The application API returned an invalid response.', response.status)
@@ -79,6 +80,12 @@ export async function getUsers(token: string, search: string, role: string, sign
   return request<{ users: Account[]; roles: string[] }>(`/users/${suffix}`, { token, signal })
 }
 
+export function updateAccountStatus(token: string, userId: number, status: 'Active' | 'Deactivated', justification: string) {
+  return request<{ id: number; status: Account['status'] }>(`/users/${userId}/status/`, {
+    token, method: 'PATCH', body: { status, justification },
+  })
+}
+
 export async function getItems(token: string, search: string, category: string, signal?: AbortSignal) {
   const params = new URLSearchParams()
   if (search.trim()) params.set('q', search.trim())
@@ -94,18 +101,41 @@ export function reserveItem(token: string, itemId: number) {
   )
 }
 
-export function createListing(token: string, listing: {
+type ListingFields = {
   title: string
   description: string
   category_id: number
   item_condition: string
   quantity: number
   pickup_location: string
-}) {
+}
+
+export function createListing(token: string, listing: ListingFields) {
   return request<{ id: number; status: string }>('/items/create/', {
     token,
     method: 'POST',
     body: listing,
+  })
+}
+
+export function saveDepartmentListing(token: string, listing: ListingFields, itemId?: number) {
+  const path = itemId === undefined ? '/department/listings/' : `/department/listings/${itemId}/`
+  return request<{ id: number; status: string }>(path, {
+    token, method: itemId === undefined ? 'POST' : 'PATCH', body: listing,
+  })
+}
+
+export function createOrganizationEvent(token: string, event: {
+  event_type: string
+  title: string
+  description: string
+  participation_instructions: string
+  location: string
+  start_at: string
+  end_at: string
+}) {
+  return request<{ id: number; status: string }>('/organization/events/', {
+    token, method: 'POST', body: event,
   })
 }
 
@@ -210,11 +240,11 @@ export function reviewPendingListing(token: string, itemId: number, action: 'app
   })
 }
 
-export function updateReportStatus(token: string, reportId: number, status: Report['status']) {
+export function updateReportStatus(token: string, reportId: number, status: Report['status'], decision?: string) {
   return request<{ id: number; status: string }>(`/reports/${reportId}/`, {
     token,
     method: 'PATCH',
-    body: { status },
+    body: { status, decision },
   })
 }
 

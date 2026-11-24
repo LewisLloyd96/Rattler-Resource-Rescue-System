@@ -1,6 +1,7 @@
-from django.db import connection
+from django.db import connection, transaction
+from django.utils import timezone
 from rest_framework import serializers, status
-from rest_framework.exceptions import APIException, NotFound, PermissionDenied, ValidationError
+from rest_framework.exceptions import APIException, MethodNotAllowed, NotFound, PermissionDenied, ValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -17,10 +18,10 @@ from api.permissions import (
 
 class ListingCreateSerializer(serializers.Serializer):
     title = serializers.CharField(max_length=150)
-    description = serializers.CharField()
+    description = serializers.CharField(max_length=10000)
     category_id = serializers.IntegerField(min_value=1)
     item_condition = serializers.ChoiceField(choices=['New', 'Like New', 'Good', 'Fair', 'Poor'])
-    quantity = serializers.IntegerField(min_value=1)
+    quantity = serializers.IntegerField(min_value=1, max_value=2147483647)
     pickup_location = serializers.CharField(max_length=200)
 
 
@@ -111,19 +112,25 @@ def _organization_for_user(user, organization_type):
     return organization
 
 
+def active_listing_category(category_id):
+    if not query_one(
+        'SELECT category_id FROM category WHERE category_id = %s AND is_active = TRUE',
+        [category_id],
+    ):
+        raise ValidationError({'category_id': 'Choose an active item category.'})
+
+
 class CampusListingCreateView(APIView):
     permission_classes = [IsAuthenticated, IsCampusUser]
 
     def post(self, request):
+        return self.create(request)
+
+    def create(self, request, organization_id=None):
         serializer = ListingCreateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         values = serializer.validated_data
-        category = query_one(
-            'SELECT category_id FROM category WHERE category_id = %s AND is_active = TRUE',
-            [values['category_id']],
-        )
-        if not category:
-            raise ValidationError({'category_id': 'Choose an active item category.'})
+        active_listing_category(values['category_id'])
         account = query_one(
             'SELECT email_verified_at FROM user WHERE user_id = %s',
             [request.user.id],
@@ -146,9 +153,10 @@ class CampusListingCreateView(APIView):
                 """
                 INSERT INTO item (
                     posted_by_user_id, category_id, title, description,
-                    item_condition, quantity, pickup_location, status
+                    item_condition, quantity, pickup_location, owner_organization_id,
+                    status
                 )
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
                 """,
                 [
                     request.user.id,
@@ -158,6 +166,7 @@ class CampusListingCreateView(APIView):
                     values['item_condition'],
                     values['quantity'],
                     values['pickup_location'],
+                    organization_id,
                     listing_status,
                 ],
             )
@@ -323,7 +332,7 @@ class CategoriesView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        if request.user.role not in {'Administrator', 'Campus User'}:
+        if request.user.role not in {'Administrator', 'Campus User', 'Department Representative'}:
             raise PermissionDenied('You cannot view item categories.')
         active_filter = '' if request.user.role == 'Administrator' else 'WHERE is_active = TRUE'
         return Response({
@@ -562,22 +571,155 @@ class PendingListingsView(APIView):
         return Response({'id': item_id, 'status': statuses[action]})
 
 
+class AccountStatusSerializer(serializers.Serializer):
+    status = serializers.ChoiceField(choices=['Active', 'Deactivated'])
+    justification = serializers.CharField(max_length=2000)
+
+
+class AccountStatusView(APIView):
+    permission_classes = [IsAuthenticated, IsAdministrator]
+
+    def patch(self, request, user_id):
+        serializer = AccountStatusSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        values = serializer.validated_data
+        if user_id == request.user.id and values['status'] == 'Deactivated':
+            raise ValidationError('You cannot deactivate your own account.')
+
+        with transaction.atomic(), connection.cursor() as cursor:
+            target = query_one('SELECT account_status FROM user WHERE user_id = %s FOR UPDATE', [user_id])
+            if not target:
+                raise NotFound('Account not found.')
+            cursor.execute('SET @actor_user_id = %s, @justification = %s', [request.user.id, values['justification']])
+            try:
+                cursor.execute('UPDATE user SET account_status = %s WHERE user_id = %s', [values['status'], user_id])
+            finally:
+                cursor.execute('SET @actor_user_id = NULL, @justification = NULL')
+        return Response({'id': user_id, 'status': values['status']})
+
+
+class DepartmentListingView(CampusListingCreateView):
+    permission_classes = [IsAuthenticated, IsDepartmentRepresentative]
+
+    def post(self, request, item_id=None):
+        if item_id is not None:
+            raise MethodNotAllowed(request.method)
+        department = _organization_for_user(request.user, 'Department')
+        return self.create(request, department['id'])
+
+    def patch(self, request, item_id=None):
+        if item_id is None:
+            raise MethodNotAllowed(request.method)
+        department = _organization_for_user(request.user, 'Department')
+        serializer = ListingCreateSerializer(data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        values = serializer.validated_data
+        if not values:
+            raise ValidationError('Enter at least one listing field.')
+        with transaction.atomic(), connection.cursor() as cursor:
+            item = query_one(
+                'SELECT category_id, status FROM item WHERE item_id = %s AND owner_organization_id = %s FOR UPDATE',
+                [item_id, department['id']],
+            )
+            if not item:
+                raise NotFound('Department listing not found.')
+            if item['status'] not in {'Available', 'Pending Review'}:
+                raise ValidationError('Only available or pending listings can be edited.')
+            if 'category_id' in values and values['category_id'] != item['category_id']:
+                active_listing_category(values['category_id'])
+            assignments = ', '.join(f'{field} = %s' for field in values)
+            cursor.execute(
+                f'UPDATE item SET {assignments} WHERE item_id = %s AND owner_organization_id = %s',
+                [*values.values(), item_id, department['id']],
+            )
+        return Response({'id': item_id, 'status': item['status']})
+
+
+class CollectionEventSerializer(serializers.Serializer):
+    event_type = serializers.ChoiceField(choices=['Collection Drive', 'Giveaway'])
+    title = serializers.CharField(max_length=150)
+    description = serializers.CharField(max_length=10000, required=False, allow_blank=True)
+    participation_instructions = serializers.CharField(max_length=10000, required=False, allow_blank=True)
+    location = serializers.CharField(max_length=200)
+    start_at = serializers.DateTimeField()
+    end_at = serializers.DateTimeField()
+
+    def validate(self, attrs):
+        start_at = timezone.make_naive(attrs['start_at'])
+        end_at = timezone.make_naive(attrs['end_at'])
+        if end_at.replace(microsecond=0) <= start_at.replace(microsecond=0):
+            raise serializers.ValidationError({'end_at': 'Choose an end time after the start time.'})
+        attrs.update(start_at=start_at, end_at=end_at)
+        return attrs
+
+
+class CollectionEventCreateView(APIView):
+    permission_classes = [IsAuthenticated, IsStudentOrganizationRepresentative]
+
+    def post(self, request):
+        serializer = CollectionEventSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        values = serializer.validated_data
+        organization = _organization_for_user(request.user, 'Student Organization')
+        if organization['status'] != 'Approved':
+            raise PermissionDenied('Only approved student organizations can host events.')
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """
+                INSERT INTO collection_event (
+                    organization_id, created_by_user_id, event_type, title, description,
+                    participation_instructions, location, start_at, end_at
+                )
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+                """,
+                [
+                    organization['id'], request.user.id, values['event_type'], values['title'],
+                    values.get('description'), values.get('participation_instructions'),
+                    values['location'], values['start_at'], values['end_at'],
+                ],
+            )
+            event_id = cursor.lastrowid
+        return Response({'id': event_id, 'status': 'Planned'}, status=status.HTTP_201_CREATED)
+
+
+class ReportStatusSerializer(serializers.Serializer):
+    status = serializers.ChoiceField(choices=['Open', 'Under Review', 'Resolved', 'Dismissed'])
+    decision = serializers.CharField(max_length=5000, required=False)
+
+
 class ReportStatusView(APIView):
     permission_classes = [IsAuthenticated]
 
     def patch(self, request, report_id):
         if request.user.role not in {'Administrator', 'Community Moderator'}:
             raise PermissionDenied('Only administrators and community moderators can review reports.')
-        report_status = request.data.get('status')
-        if report_status not in {'Open', 'Under Review', 'Resolved', 'Dismissed'}:
-            raise ValidationError({'status': 'Choose Open, Under Review, Resolved, or Dismissed.'})
-        with connection.cursor() as cursor:
-            cursor.execute(
-                'UPDATE report SET status = %s WHERE report_id = %s',
-                [report_status, report_id],
-            )
-            if cursor.rowcount == 0:
-                exists = query_one('SELECT report_id FROM report WHERE report_id = %s', [report_id])
-                if not exists:
-                    raise NotFound('Report not found.')
+        serializer = ReportStatusSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        report_status = serializer.validated_data['status']
+        decision = serializer.validated_data.get('decision')
+        closing = report_status in {'Resolved', 'Dismissed'}
+        if closing and request.user.role == 'Community Moderator' and not decision:
+            raise ValidationError({'decision': 'Describe the action taken or why no action was needed.'})
+        if decision and not closing:
+            raise ValidationError({'decision': 'Choose Resolved or Dismissed to record the decision.'})
+
+        with transaction.atomic(), connection.cursor() as cursor:
+            report = query_one('SELECT status FROM report WHERE report_id = %s FOR UPDATE', [report_id])
+            if not report:
+                raise NotFound('Report not found.')
+            if request.user.role == 'Community Moderator' and report['status'] in {'Resolved', 'Dismissed'}:
+                raise ValidationError('This report already has a final status. Refresh the report queue.')
+            if decision:
+                cursor.execute(
+                    """
+                    INSERT INTO moderation_case (
+                        report_id, assigned_to_user_id, status, resolution, closed_at
+                    ) VALUES (%s, %s, 'Closed', %s, CURRENT_TIMESTAMP)
+                    ON DUPLICATE KEY UPDATE
+                        assigned_to_user_id = %s, status = 'Closed', resolution = %s,
+                        closed_at = CURRENT_TIMESTAMP
+                    """,
+                    [report_id, request.user.id, decision, request.user.id, decision],
+                )
+            cursor.execute('UPDATE report SET status = %s WHERE report_id = %s', [report_status, report_id])
         return Response({'id': report_id, 'status': report_status})

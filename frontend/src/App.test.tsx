@@ -17,7 +17,7 @@ const listings: Listing[] = [
   { id: 2, title: 'Campbell Biology, 12th Edition', description: 'Hardcover, no writing inside.', category: 'Textbooks', condition: 'Like New', quantity: 1, location: 'Student Union', status: 'Available', owner: 'Imani Scott', ownerType: 'Campus User', organizationId: null },
 ]
 
-const demoReports: Report[] = [
+const reportFixtures: Report[] = [
   { id: 2, reason: 'Suspicious Activity', target: 'User: Tyrell Jackson', type: 'Exchange problem', status: 'Under Review', reporter: 'Christopher Lee', details: 'Three reservations were not picked up.', date: 'Oct 28, 2026', caseStatus: 'Escalated' },
   { id: 3, reason: 'Misleading Event Information', target: 'Event: Electronics Giveaway Day', type: 'Listing', status: 'Open', reporter: 'Jordan Davis', details: 'The event description and advertised items do not match.', date: 'Nov 3, 2026', caseStatus: null },
   { id: 4, reason: 'Missing parts', target: 'Listing: Desk lamp', type: 'Listing', status: 'Resolved', reporter: 'Morgan Reed', details: 'The listing was missing its power cable.', date: 'Nov 4, 2026', caseStatus: 'Closed', reportedItemId: 44, itemOwner: 'Tyrell Jackson', ownerReportedListingsCount: 2 },
@@ -47,10 +47,11 @@ function jsonResponse(payload: unknown, status = 200) {
 let fetchMock: ReturnType<typeof vi.fn>
 
 beforeEach(() => {
+  const demoReports = reportFixtures.map((report) => ({ ...report }))
   const allUsers = roles.map((candidate) => accountFor(candidate.role))
   const department: DepartmentWorkspace = {
     organization: { id: 1, name: 'Department of Computer & Information Sciences', type: 'Department' },
-    listings: [{ ...listings[0], id: 6, title: 'Dell OptiPlex 7070 Desktop Computers', owner: 'Department of Computer & Information Sciences', ownerType: 'Department', organizationId: 1 }],
+    listings: [{ ...listings[0], id: 6, categoryId: 1, title: 'Dell OptiPlex 7070 Desktop Computers', owner: 'Department of Computer & Information Sciences', ownerType: 'Department', organizationId: 1 }],
     reservations: [{ id: 10, itemId: 14, itemTitle: 'Arduino Uno Starter Kits', category: 'Electronics', reservedBy: 'Robert Hayes', reservedAt: 'Nov 16, 2026', status: 'Active' }],
   }
   const organization: OrganizationWorkspace = {
@@ -77,6 +78,12 @@ beforeEach(() => {
       const id = Number(String(init?.headers && new Headers(init.headers).get('Authorization')).replace('Bearer token-', ''))
       const account = allUsers.find((candidate) => candidate.id === id)
       return account ? jsonResponse(account) : jsonResponse({ detail: 'Session expired.' }, 401)
+    }
+    if (/\/users\/\d+\/status\/$/.test(url.pathname) && init?.method === 'PATCH') {
+      const user = allUsers.find((candidate) => candidate.id === Number(url.pathname.split('/')[3]))
+      if (!user) return jsonResponse({ detail: 'Account not found.' }, 404)
+      user.status = JSON.parse(String(init.body)).status
+      return jsonResponse({ id: user.id, status: user.status })
     }
     if (url.pathname.endsWith('/users/')) {
       let users = allUsers
@@ -119,6 +126,21 @@ beforeEach(() => {
       if (query) items = items.filter((item) => `${item.title} ${item.description} ${item.owner} ${item.category}`.toLowerCase().includes(query))
       if (category) items = items.filter((item) => item.category === category)
       return jsonResponse({ items, categories: ['Textbooks', 'Electronics'] })
+    }
+    if (url.pathname.endsWith('/department/listings/6/') && init?.method === 'PATCH') {
+      department.listings[0].title = JSON.parse(String(init.body)).title
+      return jsonResponse({ id: 6, status: 'Available' })
+    }
+    if (url.pathname.endsWith('/organization/events/') && init?.method === 'POST') {
+      const body = JSON.parse(String(init.body))
+      organization.events.push({ id: 2, title: body.title, type: body.event_type, location: body.location, description: body.description, date: 'Dec 8, 2026', status: 'Planned' })
+      return jsonResponse({ id: 2, status: 'Planned' }, 201)
+    }
+    if (url.pathname.endsWith('/reports/5/') && init?.method === 'PATCH') {
+      const report = demoReports.find((candidate) => candidate.id === 5)!
+      const body = JSON.parse(String(init.body))
+      Object.assign(report, { status: body.status, decision: body.decision })
+      return jsonResponse({ id: 5, status: body.status })
     }
     if (url.pathname.endsWith('/department/')) return jsonResponse(department)
     if (url.pathname.endsWith('/organization/')) return jsonResponse(organization)
@@ -348,4 +370,64 @@ test('rejects invalid credentials without granting access', async () => {
 
   expect(await screen.findByRole('alert')).toHaveTextContent('Email or password is incorrect.')
   expect(screen.queryByRole('navigation')).not.toBeInTheDocument()
+})
+
+test('administrators can deactivate and reactivate an account with a reason', async () => {
+  render(<App />)
+  const navigation = await signIn('angela.brooks@famu.edu')
+  fireEvent.click(within(navigation).getByRole('button', { name: 'Manage the users' }))
+
+  const jordanRow = await screen.findByRole('row', { name: /Jordan Davis/ })
+  fireEvent.change(within(jordanRow).getByRole('textbox', { name: /reason/i }), { target: { value: 'Review requested' } })
+  fireEvent.click(within(jordanRow).getByRole('button', { name: 'Deactivate' }))
+  expect(await screen.findByText('Jordan Davis is now deactivated.')).toBeInTheDocument()
+
+  const updatedRow = await screen.findByRole('row', { name: /Jordan Davis/ })
+  expect(within(updatedRow).getByText('Deactivated')).toBeInTheDocument()
+  fireEvent.change(within(updatedRow).getByRole('textbox', { name: /reason/i }), { target: { value: 'Review complete' } })
+  fireEvent.click(within(updatedRow).getByRole('button', { name: 'Activate' }))
+  expect(await screen.findByText('Jordan Davis is now active.')).toBeInTheDocument()
+})
+
+test('department representatives can edit a department listing', async () => {
+  render(<App />)
+  const navigation = await signIn('robert.hayes@famu.edu')
+  fireEvent.click(within(navigation).getByRole('button', { name: 'Department inventory' }))
+
+  fireEvent.click(await screen.findByRole('button', { name: /Edit Dell OptiPlex/ }))
+  const itemName = screen.getByLabelText('Item name')
+  expect(itemName).toHaveValue('Dell OptiPlex 7070 Desktop Computers')
+  fireEvent.change(itemName, { target: { value: 'Desktop computers with power cables' } })
+  fireEvent.click(screen.getByRole('button', { name: 'Save changes' }))
+  expect(await screen.findByText('Department listing updated.')).toBeInTheDocument()
+  expect(await screen.findByText('Desktop computers with power cables')).toBeInTheDocument()
+})
+
+test('student organization representatives can create a giveaway', async () => {
+  render(<App />)
+  const navigation = await signIn('jasmine1.carter@famu.edu')
+  fireEvent.click(within(navigation).getByRole('button', { name: 'Drives & giveaways' }))
+
+  fireEvent.change(await screen.findByLabelText('Event type'), { target: { value: 'Giveaway' } })
+  fireEvent.change(screen.getByLabelText('Event title'), { target: { value: 'Winter supply giveaway' } })
+  fireEvent.change(screen.getByLabelText('Location'), { target: { value: 'Student Union' } })
+  fireEvent.change(screen.getByLabelText('Start (Eastern time)'), { target: { value: '2026-12-08T09:00' } })
+  fireEvent.change(screen.getByLabelText('End (Eastern time)'), { target: { value: '2026-12-08T11:00' } })
+  fireEvent.click(screen.getByRole('button', { name: 'Create event' }))
+  expect(await screen.findByText('Event created.')).toBeInTheDocument()
+  expect(await screen.findByText('Winter supply giveaway')).toBeInTheDocument()
+})
+
+test('moderators can record and reopen the view of a resolved report decision', async () => {
+  render(<App />)
+  const navigation = await signIn('marcus.johnson@famu.edu')
+  fireEvent.click(within(navigation).getByRole('button', { name: 'Report queue' }))
+
+  const heading = await screen.findByRole('heading', { name: /Inaccurate description/ })
+  const report = within(heading.closest('article')!)
+  fireEvent.change(report.getByLabelText('Action taken'), { target: { value: 'Contacted the listing owner.' } })
+  fireEvent.click(report.getByRole('button', { name: 'Save decision' }))
+  expect(await screen.findByText('Decision saved for report #5.')).toBeInTheDocument()
+  fireEvent.click(await screen.findByLabelText('Include resolved and dismissed reports'))
+  expect(await screen.findByText('Decision: Contacted the listing owner.')).toBeInTheDocument()
 })

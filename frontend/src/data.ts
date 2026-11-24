@@ -19,6 +19,7 @@ export type Listing = {
   title: string
   description: string
   category: string
+  categoryId?: number
   condition: string
   quantity: number
   location: string
@@ -53,6 +54,7 @@ export type CollectionEvent = {
   location: string
   description: string | null
   date: string
+  instructions?: string | null
 }
 
 export type EventItem = {
@@ -73,6 +75,7 @@ export type Report = {
   details: string | null
   date: string
   caseStatus: string | null
+  decision?: string | null
   reportedItemId?: number | null
   itemOwner?: string | null
   ownerEmail?: string | null

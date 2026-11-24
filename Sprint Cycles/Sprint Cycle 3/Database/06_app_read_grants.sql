@@ -11,3 +11,7 @@ GRANT INSERT ON rattler_resource_rescue.message TO 'rrrs_app'@'%';
 GRANT UPDATE ON rattler_resource_rescue.report TO 'rrrs_app'@'%';
 GRANT UPDATE ON rattler_resource_rescue.system_setting TO 'rrrs_app'@'%';
 GRANT UPDATE ON rattler_resource_rescue.organization TO 'rrrs_app'@'%';
+
+GRANT UPDATE (account_status) ON rattler_resource_rescue.user TO 'rrrs_app'@'%';
+GRANT INSERT ON rattler_resource_rescue.collection_event TO 'rrrs_app'@'%';
+GRANT INSERT, UPDATE ON rattler_resource_rescue.moderation_case TO 'rrrs_app'@'%';

@@ -44,12 +44,15 @@ import {
   cancelReservation,
   createCategory,
   createListing,
+  createOrganizationEvent,
+  saveDepartmentListing,
   removeMyListing,
   reserveItem,
   reviewPendingListing,
   sendMessage,
   signIn,
   updateCategory,
+  updateAccountStatus,
   updateOrganizationProfile,
   updateReportStatus,
   updateSystemSetting,
@@ -83,7 +86,7 @@ type NavigationItem = { label: string; screen: Screen; icon: LucideIcon }
 type WorkspaceData =
   | { kind: 'users'; users: Account[]; roles: string[] }
   | { kind: 'items'; items: Listing[]; categories: string[] }
-  | { kind: 'department'; workspace: DepartmentWorkspace }
+  | { kind: 'department'; workspace: DepartmentWorkspace; categories: Category[] }
   | { kind: 'organization'; workspace: OrganizationWorkspace }
   | { kind: 'reports'; reports: Report[]; pendingListings?: MyListing[] }
   | { kind: 'categories'; categories: Category[] }
@@ -97,6 +100,14 @@ type WorkspaceData =
   | { kind: 'actions'; actions: ModerationAction[] }
 
 const TOKEN_KEY = 'rrrs_api_token'
+const formField = 'mt-1.5 w-full rounded-xl border border-stone-300 bg-white px-3.5 py-2.5 text-sm'
+const actionButton = 'rounded-lg border border-stone-200 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-stone-50 disabled:opacity-50'
+const formPanel = 'mb-6 max-w-2xl space-y-4 rounded-2xl border border-stone-200 bg-white p-5 shadow-sm'
+const primaryButton = 'rounded-xl bg-emerald-900 px-5 py-3 text-sm font-semibold text-white disabled:opacity-60'
+
+function fieldValue(form: FormData, name: string) {
+  return String(form.get(name) ?? '')
+}
 
 const roleNavigation: Record<Role, NavigationItem[]> = {
   Administrator: [
@@ -392,6 +403,8 @@ function App() {
   const [listingCategory, setListingCategory] = useState('All categories')
   const [reportSearch, setReportSearch] = useState('')
   const [reportType, setReportType] = useState('All reports')
+  const [includeClosedReports, setIncludeClosedReports] = useState(false)
+  const [editingDepartmentItem, setEditingDepartmentItem] = useState<number | null>(null)
   const [workspaceData, setWorkspaceData] = useState<WorkspaceData | null>(null)
   const [dataLoading, setDataLoading] = useState(false)
   const [dataError, setDataError] = useState('')
@@ -467,7 +480,10 @@ function App() {
       ['department', 'department-reservations'].includes(requestedScreen)
       && account.role === 'Department Representative'
     ) {
-      load = getDepartment(token, controller.signal).then((workspace) => ({ kind: 'department', workspace }))
+      load = Promise.all([
+        getDepartment(token, controller.signal),
+        requestedScreen === 'department' ? getCategories(token, controller.signal) : Promise.resolve({ categories: [] }),
+      ]).then(([workspace, result]) => ({ kind: 'department', workspace, categories: result.categories }))
     } else if (requestedScreen === 'department-profile' && account.role === 'Department Representative') {
       load = getOrganizationProfile(token, true, controller.signal)
         .then((result) => ({ kind: 'profile', organization: result.organization }))
@@ -492,7 +508,7 @@ function App() {
         screen === 'reports-queue' ? reportSearch : '',
         screen === 'reports-queue' ? reportType : '',
         controller.signal,
-        { status: 'queue' },
+        { status: screen === 'reports-queue' && includeClosedReports ? 'all' : 'queue' },
       )
       if (account.role === 'Administrator') {
         load = Promise.all([reports, getPendingListings(token, controller.signal)])
@@ -546,6 +562,7 @@ function App() {
     listingCategory,
     reportSearch,
     reportType,
+    includeClosedReports,
     refreshVersion,
   ])
 
@@ -578,6 +595,8 @@ function App() {
 
   function openScreen(nextScreen: Screen, label?: string) {
     setScreen(nextScreen)
+    setIncludeClosedReports(false)
+    setEditingDepartmentItem(null)
     const navigationLabel = label ?? navigation.find((item) => item.screen === nextScreen)?.label ?? 'Overview'
     setActiveNavigationLabel(navigationLabel)
     if (navigationLabel === 'Reported listings') {
@@ -725,7 +744,7 @@ function App() {
     if (workspaceData?.kind !== 'users') return null
     return (
       <>
-        <SectionTitle eyebrow="Administration" title="Manage users" description="Search and browse registered accounts and their assigned system roles." />
+        <SectionTitle eyebrow="Administration" title="Manage users" description="Search registered accounts and manage account access." />
         <div className="mb-4 flex flex-col gap-3 sm:flex-row">
           <label className="flex flex-1 items-center gap-2 rounded-xl border border-stone-200 bg-white px-3.5 py-2.5 text-slate-400 shadow-sm">
             <Search size={17} aria-hidden />
@@ -741,7 +760,7 @@ function App() {
         </div>
         <p className="mb-3 text-sm text-slate-500">{displayedUsers.length} accounts</p>
         <TableFrame>
-          <TableHead labels={['User', 'Email', 'System role', 'Account status']} />
+          <TableHead labels={['User', 'Email', 'System role', 'Account status', 'Change status']} />
           <tbody className="divide-y divide-stone-100">
             {displayedUsers.map((user) => (
               <tr key={user.id} className="hover:bg-stone-50/70">
@@ -749,6 +768,26 @@ function App() {
                 <td className="px-5 py-4 text-slate-600">{user.email}</td>
                 <td className="px-5 py-4 text-slate-600">{user.role}</td>
                 <td className="px-5 py-4"><StatusBadge status={user.status} /></td>
+                <td className="px-5 py-4">
+                  {user.id !== account?.id && (
+                    <form className="flex min-w-48 flex-wrap items-end gap-2" onSubmit={(event) => {
+                      event.preventDefault()
+                      const status = user.status === 'Active' ? 'Deactivated' : 'Active'
+                      const justification = fieldValue(new FormData(event.currentTarget), 'justification')
+                      void runFeatureAction(
+                        () => updateAccountStatus(token, user.id, status, justification),
+                        `${fullName(user)} is now ${status.toLowerCase()}.`,
+                      )
+                    }}>
+                      <label className="block text-xs text-slate-600">Reason
+                        <input name="justification" required maxLength={2000} className={formField} aria-label={`Reason for changing ${fullName(user)}'s status`} />
+                      </label>
+                      <button disabled={featureBusy} className={actionButton}>
+                        {user.status === 'Active' ? 'Deactivate' : 'Activate'}
+                      </button>
+                    </form>
+                  )}
+                </td>
               </tr>
             ))}
           </tbody>
@@ -815,7 +854,9 @@ function App() {
   }
 
   function renderDepartmentInventory() {
-    if (!department) return null
+    if (!department || workspaceData?.kind !== 'department') return null
+    const editingItem = department.listings.find((item) => item.id === editingDepartmentItem)
+    const categories = workspaceData.categories
     return (
       <>
         <SectionTitle eyebrow="Department inventory" title={department.organization.name} description="Inventory currently managed by your department." />
@@ -824,9 +865,10 @@ function App() {
           <Metric label="Available" value={department.listings.filter((item) => item.status === 'Available').length} note="Ready for campus pickup" icon={BadgeCheck} />
           <Metric label="Reserved items" value={department.listings.filter((item) => item.status === 'Reserved').length} note="Currently held for pickup" icon={CalendarDays} />
         </div>
+        {renderListingForm(categories, true, editingItem)}
         {department.listings.length ? (
           <TableFrame>
-            <TableHead labels={['Item', 'Category', 'Quantity', 'Status']} />
+            <TableHead labels={['Item', 'Category', 'Quantity', 'Status', 'Edit']} />
             <tbody className="divide-y divide-stone-100">
               {department.listings.map((item) => (
                 <tr key={item.id}>
@@ -834,6 +876,14 @@ function App() {
                   <td className="px-5 py-4 text-slate-600">{item.category}</td>
                   <td className="px-5 py-4 text-slate-600">{item.quantity}</td>
                   <td className="px-5 py-4"><StatusBadge status={item.status} /></td>
+                  <td className="px-5 py-4">
+                    {['Available', 'Pending Review'].includes(item.status) && (
+                      <button type="button" className={actionButton} disabled={featureBusy} onClick={() => {
+                        setEditingDepartmentItem(item.id)
+                        document.getElementById('department-listing-form')?.scrollIntoView?.({ block: 'nearest' })
+                      }}>Edit {item.title}</button>
+                    )}
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -920,6 +970,46 @@ function App() {
           <Metric label="Active events" value={organization.events.filter((event) => event.status === 'Active').length} note="Currently underway" icon={Leaf} />
           <Metric label="Items distributed" value={distributedItems} note="Given out through organization events" icon={HandHelping} />
         </div>
+        <form className={formPanel} onSubmit={(event) => {
+          event.preventDefault()
+          const form = event.currentTarget
+          const fields = new FormData(form)
+          void runFeatureAction(() => createOrganizationEvent(token, {
+            event_type: fieldValue(fields, 'event_type'),
+            title: fieldValue(fields, 'title'),
+            description: fieldValue(fields, 'description'),
+            participation_instructions: fieldValue(fields, 'participation_instructions'),
+            location: fieldValue(fields, 'location'),
+            start_at: fieldValue(fields, 'start_at'),
+            end_at: fieldValue(fields, 'end_at'),
+          }), 'Event created.').then((saved) => { if (saved) form.reset() })
+        }}>
+          <h3 className="font-bold text-slate-900">Create an event</h3>
+          <label className="block text-sm">Event type
+            <select name="event_type" className={formField}><option>Collection Drive</option><option>Giveaway</option></select>
+          </label>
+          <label className="block text-sm">Event title
+            <input name="title" required maxLength={150} className={formField} />
+          </label>
+          <label className="block text-sm">Location
+            <input name="location" required maxLength={200} className={formField} />
+          </label>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <label className="block text-sm">Start (Eastern time)
+              <input name="start_at" type="datetime-local" required className={formField} />
+            </label>
+            <label className="block text-sm">End (Eastern time)
+              <input name="end_at" type="datetime-local" required className={formField} />
+            </label>
+          </div>
+          <label className="block text-sm">Description
+            <textarea name="description" maxLength={10000} className={formField} />
+          </label>
+          <label className="block text-sm">Participation instructions
+            <textarea name="participation_instructions" maxLength={10000} className={formField} />
+          </label>
+          <button disabled={featureBusy} className={primaryButton}>Create event</button>
+        </form>
         {organization.events.length ? (
           <div className="grid gap-4 lg:grid-cols-2">
             {organization.events.map((event: CollectionEvent) => (
@@ -927,6 +1017,7 @@ function App() {
                 <div className="flex items-center justify-between gap-3"><span className="rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-800">{event.type}</span><StatusBadge status={event.status} /></div>
                 <h4 className="mt-3 font-bold text-slate-900">{event.title}</h4>
                 <p className="mt-1 text-sm leading-6 text-slate-500">{event.description}</p>
+                {event.instructions && <p className="mt-1 text-sm text-slate-600">{event.instructions}</p>}
                 <p className="mt-3 text-xs text-slate-500">{event.date} · {event.location}</p>
                 {organization.eventItems.filter((eventItem: EventItem) => eventItem.eventId === event.id).length > 0 && (
                   <ul className="mt-4 space-y-2 border-t border-stone-100 pt-3">
@@ -947,42 +1038,55 @@ function App() {
 
   function renderCreateListing() {
     if (workspaceData?.kind !== 'create-listing') return null
+    return renderListingForm(workspaceData.categories)
+  }
+
+  function renderListingForm(categories: Category[], forDepartment = false, item?: Listing) {
     function submit(event: FormEvent<HTMLFormElement>) {
       event.preventDefault()
       const form = event.currentTarget
       const values = new FormData(form)
+      const listing = {
+        title: fieldValue(values, 'title'),
+        description: fieldValue(values, 'description'),
+        category_id: Number(values.get('category_id')),
+        item_condition: fieldValue(values, 'item_condition'),
+        quantity: Number(values.get('quantity')),
+        pickup_location: fieldValue(values, 'pickup_location'),
+      }
       void runFeatureAction(
-        () => createListing(token, {
-          title: String(values.get('title') ?? ''),
-          description: String(values.get('description') ?? ''),
-          category_id: Number(values.get('category_id')),
-          item_condition: String(values.get('item_condition') ?? ''),
-          quantity: Number(values.get('quantity')),
-          pickup_location: String(values.get('pickup_location') ?? ''),
-        }),
-        'Your free item was submitted for review.',
-      ).then((succeeded) => { if (succeeded) form.reset() })
+        () => forDepartment ? saveDepartmentListing(token, listing, item?.id) : createListing(token, listing),
+        item ? 'Department listing updated.' : forDepartment ? 'Department listing created.' : 'Your free item was submitted for review.',
+      ).then((succeeded) => {
+        if (!succeeded) return
+        if (item) setEditingDepartmentItem(null)
+        else form.reset()
+      })
     }
 
     return (
       <>
-        <SectionTitle eyebrow="Share with campus" title="List a free item" description="Give a lightly used item a new home. New listings are reviewed before they appear in browse results." />
-        <form onSubmit={submit} className="max-w-2xl space-y-4 rounded-2xl border border-stone-200 bg-white p-5 shadow-sm sm:p-7">
+        {!forDepartment && <SectionTitle eyebrow="Share with campus" title="List a free item" description="Give a lightly used item a new home." />}
+        <form id={forDepartment ? 'department-listing-form' : undefined} key={item?.id ?? 'new'} onSubmit={submit} className={formPanel}>
+          {forDepartment && <h3 className="font-bold text-slate-900">{item ? `Edit ${item.title}` : 'Add a department listing'}</h3>}
           <label className="block text-sm font-medium text-slate-700">Item name
-            <input name="title" required maxLength={150} className="mt-1.5 w-full rounded-xl border border-stone-300 px-3.5 py-3 outline-none focus:border-emerald-700" />
+            <input name="title" defaultValue={item?.title} required maxLength={150} className="mt-1.5 w-full rounded-xl border border-stone-300 px-3.5 py-3 outline-none focus:border-emerald-700" />
           </label>
           <label className="block text-sm font-medium text-slate-700">Description
-            <textarea name="description" required rows={4} className="mt-1.5 w-full rounded-xl border border-stone-300 px-3.5 py-3 outline-none focus:border-emerald-700" />
+            <textarea name="description" defaultValue={item?.description} required rows={4} maxLength={10000} className="mt-1.5 w-full rounded-xl border border-stone-300 px-3.5 py-3 outline-none focus:border-emerald-700" />
           </label>
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="block text-sm font-medium text-slate-700">Category
-              <select name="category_id" required defaultValue="" className="mt-1.5 w-full rounded-xl border border-stone-300 bg-white px-3.5 py-3">
+              <select name="category_id" required defaultValue={item?.categoryId ?? ''} className="mt-1.5 w-full rounded-xl border border-stone-300 bg-white px-3.5 py-3">
                 <option value="" disabled>Choose a category</option>
-                {workspaceData.categories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}
+                {item?.categoryId && !categories.some((category) => category.id === item.categoryId) && (
+                  <option value={item.categoryId}>{item.category}</option>
+                )}
+                {categories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}
               </select>
             </label>
             <label className="block text-sm font-medium text-slate-700">Condition
-              <select name="item_condition" required defaultValue="" className="mt-1.5 w-full rounded-xl border border-stone-300 bg-white px-3.5 py-3">
+              <select name="item_condition" required defaultValue={item?.condition ?? ''} className="mt-1.5 w-full rounded-xl border border-stone-300 bg-white px-3.5 py-3">
                 <option value="" disabled>Choose a condition</option>
                 {['New', 'Like New', 'Good', 'Fair', 'Poor'].map((condition) => <option key={condition}>{condition}</option>)}
               </select>
@@ -990,14 +1094,15 @@ function App() {
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="block text-sm font-medium text-slate-700">Quantity
-              <input name="quantity" type="number" min="1" defaultValue="1" required className="mt-1.5 w-full rounded-xl border border-stone-300 px-3.5 py-3" />
+              <input name="quantity" type="number" min="1" defaultValue={item?.quantity ?? 1} required className="mt-1.5 w-full rounded-xl border border-stone-300 px-3.5 py-3" />
             </label>
             <label className="block text-sm font-medium text-slate-700">Pickup location
-              <input name="pickup_location" required maxLength={200} className="mt-1.5 w-full rounded-xl border border-stone-300 px-3.5 py-3" />
+              <input name="pickup_location" defaultValue={item?.location} required maxLength={200} className="mt-1.5 w-full rounded-xl border border-stone-300 px-3.5 py-3" />
             </label>
           </div>
-          <p className="text-sm text-slate-500">Listings are free for FAMU community members.</p>
-          <button type="submit" disabled={featureBusy} className="rounded-xl bg-emerald-900 px-5 py-3 text-sm font-semibold text-white hover:bg-emerald-800 disabled:opacity-60">Submit listing for review</button>
+          {!forDepartment && <p className="text-sm text-slate-500">Listings are free for FAMU community members.</p>}
+          <button type="submit" disabled={featureBusy} className="rounded-xl bg-emerald-900 px-5 py-3 text-sm font-semibold text-white hover:bg-emerald-800 disabled:opacity-60">{item ? 'Save changes' : forDepartment ? 'Create department listing' : 'Submit listing for review'}</button>
+          {item && <button type="button" className={`ml-2 ${actionButton}`} onClick={() => setEditingDepartmentItem(null)}>Cancel edit</button>}
         </form>
       </>
     )
@@ -1270,6 +1375,42 @@ function App() {
     )
   }
 
+  function renderReportReview(report: Report) {
+    if (report.status === 'Resolved' || report.status === 'Dismissed') return null
+    return (
+      <div className="mt-3 space-y-2">
+        {report.status === 'Open' && (
+          <button type="button" disabled={featureBusy} className={actionButton} onClick={() =>
+            void runFeatureAction(() => updateReportStatus(token, report.id, 'Under Review'), `Review started for report #${report.id}.`)
+          }>Start review</button>
+        )}
+        {role === 'Community Moderator' ? (
+          <form className="flex flex-wrap items-end gap-2" onSubmit={(event) => {
+            event.preventDefault()
+            const fields = new FormData(event.currentTarget)
+            const status = fieldValue(fields, 'status')
+            void runFeatureAction(
+              () => updateReportStatus(token, report.id, status, fieldValue(fields, 'decision')),
+              `Decision saved for report #${report.id}.`,
+            )
+          }}>
+            <label className="block min-w-40 flex-1 text-xs">Action taken
+              <textarea name="decision" required maxLength={5000} className={formField} />
+            </label>
+            <label className="block text-xs">Outcome
+              <select name="status" className={formField}><option>Resolved</option><option>Dismissed</option></select>
+            </label>
+            <button disabled={featureBusy} className={actionButton}>Save decision</button>
+          </form>
+        ) : report.status === 'Under Review' && (
+          <button type="button" disabled={featureBusy} className={actionButton} onClick={() =>
+            void runFeatureAction(() => updateReportStatus(token, report.id, 'Resolved'), `Report #${report.id} marked Resolved.`)
+          }>Resolve report</button>
+        )}
+      </div>
+    )
+  }
+
   function renderReports() {
     if (workspaceData?.kind !== 'reports') return null
     return (
@@ -1277,7 +1418,9 @@ function App() {
         <SectionTitle
           eyebrow={role === 'Administrator' ? 'Administration' : 'Community safety'}
           title={role === 'Administrator' ? 'Review reports' : activeNavigationLabel}
-          description="Reports that are open or under review and still need moderator attention."
+          description={includeClosedReports
+            ? 'Reports and recorded moderation decisions.'
+            : 'Reports that are open or under review and still need moderator attention.'}
         />
         {role === 'Administrator' && (
           <section className="mb-8">
@@ -1317,7 +1460,13 @@ function App() {
             </select>
           </label>
         </div>
-        <p className="mb-3 text-sm text-slate-500">{displayedReports.length} reports need review</p>
+        {role === 'Community Moderator' && (
+          <label className="mb-3 flex items-center gap-2 text-sm text-slate-700">
+            <input type="checkbox" checked={includeClosedReports} onChange={(event) => setIncludeClosedReports(event.target.checked)} />
+            Include resolved and dismissed reports
+          </label>
+        )}
+        <p className="mb-3 text-sm text-slate-500">{displayedReports.length} reports</p>
         <div className="space-y-3">
           {displayedReports.map((report) => (
             <article key={report.id} className="rounded-2xl border border-stone-200 bg-white p-5 shadow-sm sm:p-6">
@@ -1330,21 +1479,10 @@ function App() {
                 </div>
                 <div className="flex shrink-0 flex-col items-start gap-2 sm:items-end">
                   <span className="text-xs text-slate-400">{report.date}</span>
-                  {report.status !== 'Resolved' && report.status !== 'Dismissed' && (
-                    <button
-                      type="button"
-                      disabled={featureBusy}
-                      onClick={() => {
-                        const nextStatus = report.status === 'Open' ? 'Under Review' : 'Resolved'
-                        void runFeatureAction(() => updateReportStatus(token, report.id, nextStatus), `Report #${report.id} marked ${nextStatus}.`)
-                      }}
-                      className="rounded-lg border border-stone-200 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-stone-50 disabled:opacity-50"
-                    >
-                      {report.status === 'Open' ? 'Start review' : 'Resolve report'}
-                    </button>
-                  )}
                 </div>
               </div>
+              {report.decision && <p className="mt-3 whitespace-pre-wrap text-sm text-slate-700">Decision: {report.decision}</p>}
+              {renderReportReview(report)}
               <p className="mt-4 border-t border-stone-100 pt-3 text-xs text-slate-500">Reported by <span className="font-medium text-slate-700">{report.reporter}</span></p>
             </article>
           ))}
@@ -1378,6 +1516,8 @@ function App() {
                     <span className="font-medium text-slate-900">{report.target.replace(/^Listing:\s*/, '')}</span>
                     <span className="mt-1 block text-xs text-slate-500">{report.reason}</span>
                     {report.details && <span className="mt-1 block max-w-sm text-xs text-slate-500">{report.details}</span>}
+                    {report.decision && <span className="mt-1 block max-w-sm whitespace-pre-wrap text-xs text-slate-700">Decision: {report.decision}</span>}
+                    {renderReportReview(report)}
                   </td>
                   <td className="px-5 py-4 text-slate-700">{report.itemOwner ?? 'Owner unavailable'}</td>
                   <td className="px-5 py-4 text-slate-700">
