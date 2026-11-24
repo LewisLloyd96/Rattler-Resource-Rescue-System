@@ -90,9 +90,3 @@ The demonstration includes:
 4. Invalid-data validation.
 5. Previously implemented functionality.
 
-## Team Contributions
-
-All team members are expected to contribute to development, maintain access to the GitHub repository, and verify that they can pull and run the latest version of the application.
-
-The repository contains the official project source code and Sprint Cycle V implementation.
-
