@@ -68,6 +68,27 @@ The Sprint V implementation is tested using the following scenarios:
 - **Role-based access:** Verify that users can access only the functionality authorized for their assigned roles.
 - **Regression testing:** Confirm that authentication, role-specific dashboards, navigation, and previously implemented functionality continue to work.
 
+### Automated acceptance tests
+
+`Testing/sprint5_api_test.py` runs every scenario above against the running API and the real MySQL database, and checks each change with a direct `SELECT`. Results of the last run are in `Testing/sprint5_api_test_output.txt`: **28 of 28 checks passed**.
+
+| Use case | Valid case | Invalid / incomplete case | Database check |
+|---|---|---|---|
+| Administrator activates/deactivates an account | Deactivate, then reactivate | Missing justification; deactivating own account; Campus User refused (403) | `user.account_status` changes; both changes in `audit_log`; deactivated user cannot sign in |
+| Campus User lists an item | Listing created (Pending Review) | Blank title and quantity 0; unknown category | New `item` row owned by the user; invalid attempts insert nothing |
+| Department Representative creates/updates a listing | New listing; existing listing updated | Unknown condition; editing another department’s listing (404) | `item.owner_organization_id` is the department; quantity and location before → after |
+| Student Org Representative creates a drive or giveaway | Collection drive created | End before start; missing location; Campus User refused (403) | New `collection_event` row for the organization |
+| Community Moderator reviews a report | Report resolved with the action taken | Closing without describing the action; changing an already-closed report; Campus User refused (403) | `report.status` updated; `moderation_case.resolution` holds the action |
+| Previously implemented functionality | Sprint IV acceptance tests re-run | | 32 of 32 still pass |
+
+Run it from the repository root with the backend virtual environment active and the API running (it reads `backend/.env`). The tests write real data, so reload `01_schema.sql`, `02_sample_data.sql` and `05_demo_passwords.sql` before a demonstration.
+
+```bash
+python "Sprint Cycles/Sprint Cycle 5/Testing/sprint5_api_test.py"
+```
+
+Unit tests: `cd backend && python manage.py test` (10 tests) and `cd frontend && npm test` (19 tests).
+
 ## Technology Stack
 
 - Frontend: React, TypeScript, and Tailwind CSS
@@ -81,7 +102,7 @@ The Sprint V implementation is tested using the following scenarios:
 
 A recorded demonstration of Sprint Cycle V functionality is provided below.
 
-**Video:** [Insert accessible video link here]
+**Video:** [`Video/Sprint-V-Demo.mp4`](Video/Sprint-V-Demo.mp4) (4 min 13 s, MP4). It is a screen recording of the application running from this repository; captions describe each step, and the dark terminal panels show live `mysql` query output before and after each change.
 
 The demonstration includes:
 1. Application startup and user authentication.

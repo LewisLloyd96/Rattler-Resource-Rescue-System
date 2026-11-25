@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react'
 import {
   ArrowUpRight,
   BadgeCheck,
@@ -412,6 +412,12 @@ function App() {
   const [reservationFeedback, setReservationFeedback] = useState<{ kind: 'success' | 'error'; message: string } | null>(null)
   const [reservingItemId, setReservingItemId] = useState<number | null>(null)
   const [featureFeedback, setFeatureFeedback] = useState<{ kind: 'success' | 'error'; message: string } | null>(null)
+  const featureFeedbackRef = useRef<HTMLDivElement>(null)
+
+  // Forms can sit far down the page; bring the result message into view.
+  useEffect(() => {
+    if (featureFeedback) featureFeedbackRef.current?.scrollIntoView?.({ behavior: 'smooth', block: 'center' })
+  }, [featureFeedback])
   const [featureBusy, setFeatureBusy] = useState(false)
 
   useEffect(() => {
@@ -1585,7 +1591,7 @@ function App() {
         <main className="mx-auto max-w-[1440px] p-5 sm:p-8 lg:p-10">
           {dataLoading && <div role="status" className="mb-5 rounded-xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">Loading live data from the database…</div>}
           {featureFeedback && (
-            <div role={featureFeedback.kind === 'error' ? 'alert' : 'status'} className={`mb-5 rounded-xl border px-4 py-3 text-sm ${featureFeedback.kind === 'error' ? 'border-red-200 bg-red-50 text-red-800' : 'border-emerald-200 bg-emerald-50 text-emerald-900'}`}>
+            <div ref={featureFeedbackRef} role={featureFeedback.kind === 'error' ? 'alert' : 'status'} className={`mb-5 rounded-xl border px-4 py-3 text-sm ${featureFeedback.kind === 'error' ? 'border-red-200 bg-red-50 text-red-800' : 'border-emerald-200 bg-emerald-50 text-emerald-900'}`}>
               {featureFeedback.message}
             </div>
           )}

@@ -30,6 +30,16 @@ type RequestOptions = {
   signal?: AbortSignal
 }
 
+// DRF returns errors as {detail: "..."}, {field: ["..."]}, {field: "..."} or ["..."].
+function errorMessage(payload: unknown): string | undefined {
+  const text = (value: unknown) =>
+    typeof value === 'string' ? value : Array.isArray(value) && typeof value[0] === 'string' ? value[0] : undefined
+  if (Array.isArray(payload)) return text(payload)
+  if (!payload || typeof payload !== 'object') return undefined
+  const fields = payload as Record<string, unknown>
+  return text(fields.detail) ?? Object.values(fields).map(text).find((message) => message !== undefined)
+}
+
 async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const headers: Record<string, string> = { Accept: 'application/json' }
   if (options.body !== undefined) headers['Content-Type'] = 'application/json'
@@ -50,12 +60,7 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
 
   const payload = await response.json().catch(() => null) as Record<string, unknown> | null
   if (!response.ok) {
-    const detail = payload?.detail
-    const fieldError = Object.entries(payload ?? {}).find(([, value]) => Array.isArray(value) && typeof value[0] === 'string')
-    const message = typeof detail === 'string'
-      ? detail
-      : fieldError ? String((fieldError[1] as string[])[0]) : `The application API returned an error (${response.status}).`
-    throw new ApiError(message, response.status)
+    throw new ApiError(errorMessage(payload) ?? `The application API returned an error (${response.status}).`, response.status)
   }
   if (payload === null) throw new ApiError('The application API returned an invalid response.', response.status)
   return payload as T

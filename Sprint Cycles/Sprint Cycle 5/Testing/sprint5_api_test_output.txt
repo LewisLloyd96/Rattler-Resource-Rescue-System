@@ -1,0 +1,43 @@
+1. Administrator activates or deactivates a user account
+     before: Brianna Harris is Active
+  PASS  Valid: deactivate account  (HTTP 200, MySQL now Deactivated)
+  PASS  Deactivated user can no longer sign in  (HTTP 401: This account is not active. Please contact an administrator.)
+  PASS  Valid: reactivate account  (HTTP 200, MySQL now Active)
+  PASS  Database: both changes logged in audit_log with justification  (account_status: Active -> Deactivated | account_status: Deactivated -> Active)
+  PASS  Invalid: missing justification rejected  (HTTP 400: {"justification": ["This field is required."]})
+  PASS  Invalid: administrator cannot deactivate own account  (HTTP 400: ["You cannot deactivate your own account."])
+  PASS  Authorization: Campus User refused  (HTTP 403)
+
+2. Campus User lists an item
+  PASS  Valid: listing created  (HTTP 201: {"id": 29, "status": "Pending Review"})
+  PASS  Database: row inserted into item, owned by the Campus User  (item_id 29, status Pending Review)
+  PASS  Invalid: blank title and quantity 0 rejected  (HTTP 400: {"title": ["This field may not be blank."], "quantity": ["Ensure this value is greater than or equal to 1."]})
+  PASS  Invalid: unknown category rejected  (HTTP 400: {"category_id": "Choose an active item category."})
+  PASS  Database: nothing inserted by the invalid attempts
+
+3. Department Representative creates or updates a department listing
+  PASS  Valid: department listing created  (HTTP 201)
+  PASS  Database: owned by the department  (Department of Computer & Information Sciences)
+  PASS  Valid: existing listing updated  (before 3 @ Banneker Building, Suite 120 -> after 4 @ Banneker Building, Suite 120)
+  PASS  Invalid: unknown condition rejected  (HTTP 400: {"item_condition": ["\"Broken\" is not a valid choice."]})
+  PASS  Invalid: cannot edit another department's listing  (HTTP 404: {"detail": "Department listing not found."})
+
+4. Student Organization Representative creates a giveaway or collection drive
+  PASS  Valid: collection drive created  (HTTP 201: {"id": 4, "status": "Planned"})
+  PASS  Database: row inserted into collection_event for the organization  (event_id 4, Collection Drive, Planned, FAMU Environmental Club)
+  PASS  Invalid: end before start rejected  (HTTP 400: {"end_at": ["Choose an end time after the start time."]})
+  PASS  Invalid: missing location rejected  (HTTP 400: {"location": ["This field is required."]})
+  PASS  Authorization: Campus User refused  (HTTP 403)
+
+5. Community Moderator reviews a report and records the action taken
+     before: report #2 (Suspicious Activity) is Under Review
+  PASS  Invalid: closing without describing the action rejected  (HTTP 400: {"decision": "Describe the action taken or why no action was needed."})
+  PASS  Valid: report resolved with action taken  (HTTP 200)
+  PASS  Database: report.status updated and moderation_case records the action  (report Resolved; case Closed: Contacted the owner; listing photos and description corrected.)
+  PASS  Invalid: an already closed report cannot be changed again  (HTTP 400: ["This report already has a final status. Refresh the report queue."])
+  PASS  Authorization: Campus User refused  (HTTP 403)
+
+6. Previously implemented functionality (Sprint IV tests)
+  PASS  Sprint IV sign-in, navigation data and authorization still pass  (32 of 32 checks passed)
+
+28 of 28 checks passed
